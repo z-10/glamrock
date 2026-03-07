@@ -526,6 +526,7 @@ keyword
 	/ else
 	/ end
 	/ false
+	/ for
 	/ holds
 	/ if
 	/ into
