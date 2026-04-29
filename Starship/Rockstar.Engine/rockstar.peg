@@ -36,8 +36,8 @@ block <Block>
 statement -memoize
 	= listen_stmt
 	/ output_stmt
-	/ spotlight_stmt
-	/ featuring_stmt
+	/ shining_stmt
+	/ channeling_stmt
 	/ function
 	/ function_call
 	/ call_stmt
@@ -68,15 +68,17 @@ enlistment <Statement>
 	/ d:delist
 		{ new ExpressionStatement(d) }
 
-spotlight_stmt <Statement>
-	= spotlight _ v:assignable_or_error
-		{ new Spotlight(v) }
+shining_stmt <Statement>
+	= shining _ v:assignable_or_error
+		{ new Shining(v) }
 
-featuring_stmt <Statement>
-	= featuring _ p:string _ as _ a:variable
-		{ new Featuring(p.Value, a) }
-	/ featuring _ p:string
-		{ new Featuring(p.Value) }
+channeling_stmt <Statement>
+	= channeling _ a:variable _ from _ p:module_path
+		{ new Channeling(p, a) }
+	/ channeling _ p:module_path
+		{ new Channeling(p) }
+
+module_path = ("" (letter / [0-9_/\\.\-])+)
 
 delist <VariableExpression>
 	= roll_list
@@ -530,8 +532,9 @@ keyword
 	= keywords_which_can_begin_an_expression
 	/ as
 	/ as_great
-	/ featuring
-	/ spotlight
+	/ channeling
+	/ from
+	/ shining
 	/ as_small
 	/ at
 	/ back
@@ -618,9 +621,10 @@ end = 'end' !letter / 'yeah' !letter / 'baby' !letter / 'oh' !letter
 every = 'every' !letter
 exit = 'exit' !letter
 exactly = 'exactly' !letter / 'totally' !letter / 'really' !letter
-featuring = 'featuring' !letter
+channeling = 'channeling' !letter / 'calling' !letter / 'bringing' !letter
 false = "false" !letter / "lies" !letter / "no" !letter / "wrong"!letter
 for = 'for' !letter
+from = 'from' !letter
 his = 'his' !letter / 'her' !letter
 holds = 'hold' !letter / 'holds' !letter
 if = 'if' !letter / 'when' !letter
@@ -656,7 +660,7 @@ return = 'return' !letter / 'giving' !letter / 'give' !letter / 'send' !letter
 roll = 'roll' !letter
 says = 'say' !letter / 'says' !letter / 'said' !letter
 split = 'cut' !letter / 'split' !letter / 'shatter' !letter
-spotlight = 'spotlight' !letter
+shining = 'shining' !letter / 'lighting' !letter / 'beaconing' !letter
 takes = 'takes' !letter / 'wants' !letter
 taking = 'taking' !letter
 than = 'than' !letter

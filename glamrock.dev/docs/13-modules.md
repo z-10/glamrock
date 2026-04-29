@@ -3,7 +3,7 @@ title: "Modules \U0001F48E"
 layout: docs
 examples: /examples/13-modules/
 nav_order: "1012"
-summary: "GlamRock extension: split your programs across files with featuring and spotlight."
+summary: "GlamRock extension: split your programs across files with channeling and shining."
 ---
 > **GlamRock Extension** 🎸 This feature is a GlamRock extension and is not part of standard Rockstar.
 
@@ -11,27 +11,27 @@ summary: "GlamRock extension: split your programs across files with featuring an
 
 As any band manager will tell you, the secret to a great show is knowing who's on stage and who's backstage. GlamRock's module system lets you split your programs across multiple `.rock` files, control what's visible, and reuse code like a greatest hits compilation.
 
-### Exporting with `spotlight`
+### Exporting with `shining`
 
-The `spotlight` keyword marks a variable or function as exported. Only spotlighted symbols are visible to other files — everything else stays backstage.
+The `shining` keyword marks a variable or function as exported — it's shining on stage for the world to see. Everything else stays backstage.
 
 {% rockstar_include math-module.rock %}
 
-In this example, `The Pi`, `Add`, and `Multiply` are in the spotlight. `The Secret` stays hidden.
+In this example, `The Pi`, `Add`, and `Multiply` are shining. `The Secret` stays hidden.
 
-### Importing with `featuring`
+### Importing with `channeling`
 
-The `featuring` keyword imports a module, just like a featured artist on a track.
+The `channeling` keyword imports a module — you're channeling the power of another file. Aliases `calling` and `bringing` do the same thing.
 
 #### Namespace imports
 
-Use `featuring ... as ...` to import a module's exports into a named namespace. Access members using `at` with the export name:
+Use `channeling Alias from module` to import a module's exports into a named namespace. Access members using `at` with the export name:
 
 {% rockstar_include featuring-with-alias.rock %}
 
 #### Direct imports
 
-Use `featuring` without `as` to import all exported symbols directly into the current scope:
+Use `channeling` (or `calling` / `bringing`) without `from` to import all exported symbols directly into the current scope:
 
 {% rockstar_include featuring-without-alias.rock %}
 
@@ -39,15 +39,15 @@ Use `featuring` without `as` to import all exported symbols directly into the cu
 
 ### Module isolation
 
-Modules execute in their own isolated environment. Non-spotlighted variables are completely invisible to the importer:
+Modules execute in their own isolated environment. Variables not marked with `shining` are completely invisible to the importer:
 
 {% rockstar_include module-isolation.rock %}
 
-`The Answer` was spotlighted, so it's accessible. `The Hidden` was not, so it returns `mysterious`.
+`The Answer` was shining, so it's accessible. `The Hidden` was not, so it returns `mysterious`.
 
 ### How modules work
 
-* **File resolution**: Paths are relative to the importing file. The `.rock` extension is optional, so `Featuring "math"` and `Featuring "math.rock"` are equivalent.
+* **File resolution**: Paths are relative to the importing file. The `.rock` extension is optional, so `Channeling math` and `Channeling math.rock` are equivalent.
 * **Caching**: Each module is parsed and executed only once, no matter how many times it's imported.
 * **Circular imports**: If module A imports module B which imports module A, GlamRock will throw an error rather than loop forever.
 * **Isolation**: Modules run in their own scope. Global variables in a module do not leak into the importer.
@@ -57,7 +57,7 @@ Modules execute in their own isolated environment. Non-spotlighted variables are
 When you import a module with an alias, the exports are stored as a collection with string keys. Use `at` to access them:
 
 ```
-Featuring "math.rock" as Math
+Channeling Math from math
 
 (Access a variable)
 Shout Math at "The Pi"

@@ -126,8 +126,8 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 	private Result Execute(Statement statement) => statement switch {
 		Output output => Output(output),
-		Spotlight spotlight => ExecuteSpotlight(spotlight),
-		Featuring featuring => ExecuteFeaturing(featuring),
+		Shining shining => ExecuteShining(shining),
+		Channeling channeling => ExecuteChanneling(channeling),
 		Declare declare => Declare(declare),
 		Assign assign => Assign(assign),
 		Loop loop => Loop(loop),
@@ -157,25 +157,25 @@ public class RockstarEnvironment(IRockstarIO io) {
 		return Assign(ninja.Variable, value);
 	}
 
-	private Result ExecuteSpotlight(Spotlight spotlight) {
-		MarkSpotlight(spotlight.Variable);
+	private Result ExecuteShining(Shining shining) {
+		MarkSpotlight(shining.Variable);
 		return Result.Unknown;
 	}
 
-	private Result ExecuteFeaturing(Featuring featuring) {
+	private Result ExecuteChanneling(Channeling channeling) {
 		var loader = ModuleLoader
 			?? throw new("Module imports require a module loader (are you running from a file?)");
 
-		var resolvedPath = Engine.ModuleLoader.ResolvePath(featuring.Path, SourceFilePath);
+		var resolvedPath = Engine.ModuleLoader.ResolvePath(channeling.Path, SourceFilePath);
 		var exports = loader.Load(resolvedPath, IO);
 
-		if (featuring.Alias != null) {
+		if (channeling.Alias != null) {
 			// Namespace import: store exports as an array with string keys
 			var ns = new Arräy();
 			foreach (var (name, value) in exports.All) {
 				ns.Set([new Strïng(name)], value);
 			}
-			SetVariable(featuring.Alias, ns);
+			SetVariable(channeling.Alias, ns);
 		} else {
 			// Import all exported symbols into current scope
 			foreach (var (name, value) in exports.All) {
