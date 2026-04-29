@@ -45,7 +45,12 @@ public static class Program {
 	private static void RunFile(string path, string[] args) {
 		Stopwatch? sw = null;
 		IRockstarIO io = new ConsoleIO();
-		var env = new RockstarEnvironment(io, args);
+		var loader = new ModuleLoader();
+		var fullPath = Path.GetFullPath(path);
+		var env = new RockstarEnvironment(io, args) {
+			SourceFilePath = fullPath,
+			ModuleLoader = loader
+		};
 		var source = File.ReadAllText(path).ReplaceLineEndings();
 		if (showTiming) {
 			sw = new();

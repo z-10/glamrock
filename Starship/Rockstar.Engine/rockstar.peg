@@ -36,6 +36,8 @@ block <Block>
 statement -memoize
 	= listen_stmt
 	/ output_stmt
+	/ shining_stmt
+	/ channeling_stmt
 	/ function
 	/ function_call
 	/ call_stmt
@@ -65,6 +67,18 @@ enlistment <Statement>
 		{ new Assign(t, d) }
 	/ d:delist
 		{ new ExpressionStatement(d) }
+
+shining_stmt <Statement>
+	= light _ v:variable_list
+		{ new Light(v.ToList()) }
+
+channeling_stmt <Statement>
+	= channel _ m:variable "'s" _ v:variable_list
+		{ new Channeling(m, v.ToList()) }
+	/ channel _ v:variable_list _ from _ m:variable
+		{ new Channeling(m, v.ToList()) }
+	/ channel _ m:variable
+		{ new Channeling(m) }
 
 delist <VariableExpression>
 	= roll_list
@@ -395,7 +409,9 @@ lookup <Expression>
 		{ new Lookup(v) }
 
 index <Expression>
-	= _ at _ i:numeric_expression
+	= _ at _ i:string
+		{ i }
+	/ _ at _ i:numeric_expression
 		{ i }
 
 indexes <IEnumerable<Expression>>
@@ -516,6 +532,9 @@ keyword
 	= keywords_which_can_begin_an_expression
 	/ as
 	/ as_great
+	/ channel
+	/ from
+	/ light
 	/ as_small
 	/ at
 	/ back
@@ -602,8 +621,10 @@ end = 'end' !letter / 'yeah' !letter / 'baby' !letter / 'oh' !letter
 every = 'every' !letter
 exit = 'exit' !letter
 exactly = 'exactly' !letter / 'totally' !letter / 'really' !letter
+channel = 'channel' !letter / 'bring' !letter
 false = "false" !letter / "lies" !letter / "no" !letter / "wrong"!letter
 for = 'for' !letter
+from = 'from' !letter
 his = 'his' !letter / 'her' !letter
 holds = 'hold' !letter / 'holds' !letter
 if = 'if' !letter / 'when' !letter
@@ -639,6 +660,7 @@ return = 'return' !letter / 'giving' !letter / 'give' !letter / 'send' !letter
 roll = 'roll' !letter
 says = 'say' !letter / 'says' !letter / 'said' !letter
 split = 'cut' !letter / 'split' !letter / 'shatter' !letter
+light = 'light' !letter / 'ignite' !letter / 'shine' !letter / 'beacon' !letter
 takes = 'takes' !letter / 'wants' !letter
 taking = 'taking' !letter
 than = 'than' !letter

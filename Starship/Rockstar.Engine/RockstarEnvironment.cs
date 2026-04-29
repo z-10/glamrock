@@ -35,6 +35,29 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 	protected IRockstarIO IO = io;
 
+	public string? SourceFilePath { get; set; }
+	public ModuleLoader? ModuleLoader { get; set; }
+
+	private readonly HashSet<string> spotlightedNames = new();
+	private readonly Dictionary<string, string> spotlightedOriginalNames = new();
+
+	public void MarkSpotlight(Variable variable) {
+		var qualified = QualifyPronoun(variable);
+		spotlightedNames.Add(qualified.Key);
+		spotlightedOriginalNames[qualified.Key] = qualified.Name;
+	}
+
+	public ModuleExports CollectExports() {
+		var exports = new ModuleExports();
+		foreach (var key in spotlightedNames) {
+			if (variables.TryGetValue(key, out var value)) {
+				var originalName = spotlightedOriginalNames.GetValueOrDefault(key, key);
+				exports.Add(originalName, value);
+			}
+		}
+		return exports;
+	}
+
 	public string? ReadInput() => IO.Read();
 	public void Write(string output) => IO.Write(output);
 
@@ -103,6 +126,8 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 	private Result Execute(Statement statement) => statement switch {
 		Output output => Output(output),
+		Light light => ExecuteLight(light),
+		Channeling channeling => ExecuteChanneling(channeling),
 		Declare declare => Declare(declare),
 		Assign assign => Assign(assign),
 		Loop loop => Loop(loop),
@@ -130,6 +155,40 @@ public class RockstarEnvironment(IRockstarIO io) {
 		var value = Strïng.Empty;
 		value.Append(Eval(ninja.Numbër));
 		return Assign(ninja.Variable, value);
+	}
+
+	private Result ExecuteLight(Light light) {
+		foreach (var variable in light.Variables) {
+			MarkSpotlight(variable);
+		}
+		return Result.Unknown;
+	}
+
+	private Result ExecuteChanneling(Channeling channeling) {
+		var loader = ModuleLoader
+			?? throw new("Module imports require a module loader (are you running from a file?)");
+
+		var resolvedPath = Engine.ModuleLoader.ResolvePath(channeling.ModulePath, SourceFilePath);
+		var exports = loader.Load(resolvedPath, IO);
+
+		if (channeling.Imports != null) {
+			// Selective import: only import specified symbols
+			foreach (var variable in channeling.Imports) {
+				var key = variable.Name;
+				if (exports.TryGet(key, out var value)) {
+					variables[variable.Key] = value;
+				} else {
+					throw new($"Module '{channeling.ModulePath}' does not export '{key}'");
+				}
+			}
+		} else {
+			// Import all exported symbols into current scope
+			foreach (var (name, value) in exports.All) {
+				variables[name.ToLower().Replace(" ", "_")] = value;
+			}
+		}
+
+		return Result.Unknown;
 	}
 
 	private Result Output(Output output) {
