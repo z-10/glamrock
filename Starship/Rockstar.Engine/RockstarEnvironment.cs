@@ -35,6 +35,29 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 	protected IRockstarIO IO = io;
 
+	public string? SourceFilePath { get; set; }
+	public ModuleLoader? ModuleLoader { get; set; }
+
+	private readonly HashSet<string> spotlightedNames = new();
+	private readonly Dictionary<string, string> spotlightedOriginalNames = new();
+
+	public void MarkSpotlight(Variable variable) {
+		var qualified = QualifyPronoun(variable);
+		spotlightedNames.Add(qualified.Key);
+		spotlightedOriginalNames[qualified.Key] = qualified.Name;
+	}
+
+	public ModuleExports CollectExports() {
+		var exports = new ModuleExports();
+		foreach (var key in spotlightedNames) {
+			if (variables.TryGetValue(key, out var value)) {
+				var originalName = spotlightedOriginalNames.GetValueOrDefault(key, key);
+				exports.Add(originalName, value);
+			}
+		}
+		return exports;
+	}
+
 	public string? ReadInput() => IO.Read();
 	public void Write(string output) => IO.Write(output);
 
@@ -103,6 +126,8 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 	private Result Execute(Statement statement) => statement switch {
 		Output output => Output(output),
+		Spotlight spotlight => ExecuteSpotlight(spotlight),
+		Featuring featuring => ExecuteFeaturing(featuring),
 		Declare declare => Declare(declare),
 		Assign assign => Assign(assign),
 		Loop loop => Loop(loop),
@@ -130,6 +155,35 @@ public class RockstarEnvironment(IRockstarIO io) {
 		var value = Strïng.Empty;
 		value.Append(Eval(ninja.Numbër));
 		return Assign(ninja.Variable, value);
+	}
+
+	private Result ExecuteSpotlight(Spotlight spotlight) {
+		MarkSpotlight(spotlight.Variable);
+		return Result.Unknown;
+	}
+
+	private Result ExecuteFeaturing(Featuring featuring) {
+		var loader = ModuleLoader
+			?? throw new("Module imports require a module loader (are you running from a file?)");
+
+		var resolvedPath = Engine.ModuleLoader.ResolvePath(featuring.Path, SourceFilePath);
+		var exports = loader.Load(resolvedPath, IO);
+
+		if (featuring.Alias != null) {
+			// Namespace import: store exports as an array with string keys
+			var ns = new Arräy();
+			foreach (var (name, value) in exports.All) {
+				ns.Set([new Strïng(name)], value);
+			}
+			SetVariable(featuring.Alias, ns);
+		} else {
+			// Import all exported symbols into current scope
+			foreach (var (name, value) in exports.All) {
+				variables[name] = value;
+			}
+		}
+
+		return Result.Unknown;
 	}
 
 	private Result Output(Output output) {

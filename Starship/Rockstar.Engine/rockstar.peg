@@ -36,6 +36,8 @@ block <Block>
 statement -memoize
 	= listen_stmt
 	/ output_stmt
+	/ spotlight_stmt
+	/ featuring_stmt
 	/ function
 	/ function_call
 	/ call_stmt
@@ -65,6 +67,16 @@ enlistment <Statement>
 		{ new Assign(t, d) }
 	/ d:delist
 		{ new ExpressionStatement(d) }
+
+spotlight_stmt <Statement>
+	= spotlight _ v:assignable_or_error
+		{ new Spotlight(v) }
+
+featuring_stmt <Statement>
+	= featuring _ p:string _ as _ a:variable
+		{ new Featuring(p.Value, a) }
+	/ featuring _ p:string
+		{ new Featuring(p.Value) }
 
 delist <VariableExpression>
 	= roll_list
@@ -395,7 +407,9 @@ lookup <Expression>
 		{ new Lookup(v) }
 
 index <Expression>
-	= _ at _ i:numeric_expression
+	= _ at _ i:string
+		{ i }
+	/ _ at _ i:numeric_expression
 		{ i }
 
 indexes <IEnumerable<Expression>>
@@ -516,6 +530,8 @@ keyword
 	= keywords_which_can_begin_an_expression
 	/ as
 	/ as_great
+	/ featuring
+	/ spotlight
 	/ as_small
 	/ at
 	/ back
@@ -602,6 +618,7 @@ end = 'end' !letter / 'yeah' !letter / 'baby' !letter / 'oh' !letter
 every = 'every' !letter
 exit = 'exit' !letter
 exactly = 'exactly' !letter / 'totally' !letter / 'really' !letter
+featuring = 'featuring' !letter
 false = "false" !letter / "lies" !letter / "no" !letter / "wrong"!letter
 for = 'for' !letter
 his = 'his' !letter / 'her' !letter
@@ -639,6 +656,7 @@ return = 'return' !letter / 'giving' !letter / 'give' !letter / 'send' !letter
 roll = 'roll' !letter
 says = 'say' !letter / 'says' !letter / 'said' !letter
 split = 'cut' !letter / 'split' !letter / 'shatter' !letter
+spotlight = 'spotlight' !letter
 takes = 'takes' !letter / 'wants' !letter
 taking = 'taking' !letter
 than = 'than' !letter
