@@ -278,6 +278,24 @@ public class RockstarEnvironment(IRockstarIO io) {
 			sb.Append(variable.Key).Append(" : ");
 			variable.Value.Dump(sb, "");
 		}
+		if (spotlightedNames.Any()) {
+			sb.AppendLine("====== EXPORTED ======");
+			foreach (var name in spotlightedNames) {
+				sb.Append(name);
+				if (spotlightedOriginalNames.TryGetValue(name, out var original) && original != name) {
+					sb.Append($" ({original})");
+				}
+				sb.AppendLine();
+			}
+		}
+		if (loadedModuleExports.Any()) {
+			sb.AppendLine("======= MODULES ======");
+			foreach (var (key, exports) in loadedModuleExports) {
+				sb.Append(key).Append(": ");
+				sb.AppendJoin(", ", exports.All.Keys);
+				sb.AppendLine();
+			}
+		}
 		sb.AppendLine("======================");
 		var dump = sb.ToString();
 		Write(dump);
