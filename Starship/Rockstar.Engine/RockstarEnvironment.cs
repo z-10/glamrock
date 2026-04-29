@@ -35,6 +35,31 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 	protected IRockstarIO IO = io;
 
+	public string? SourceFilePath { get; set; }
+	public ModuleLoader? ModuleLoader { get; set; }
+
+	private readonly Dictionary<string, ModuleExports> loadedModuleExports = new(StringComparer.OrdinalIgnoreCase);
+
+	private readonly HashSet<string> spotlightedNames = new();
+	private readonly Dictionary<string, string> spotlightedOriginalNames = new();
+
+	public void MarkSpotlight(Variable variable) {
+		var qualified = QualifyPronoun(variable);
+		spotlightedNames.Add(qualified.Key);
+		spotlightedOriginalNames[qualified.Key] = qualified.Name;
+	}
+
+	public ModuleExports CollectExports() {
+		var exports = new ModuleExports();
+		foreach (var key in spotlightedNames) {
+			if (variables.TryGetValue(key, out var value)) {
+				var originalName = spotlightedOriginalNames.GetValueOrDefault(key, key);
+				exports.Add(originalName, value);
+			}
+		}
+		return exports;
+	}
+
 	public string? ReadInput() => IO.Read();
 	public void Write(string output) => IO.Write(output);
 
@@ -103,6 +128,8 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 	private Result Execute(Statement statement) => statement switch {
 		Output output => Output(output),
+		Light light => ExecuteLight(light),
+		Channeling channeling => ExecuteChanneling(channeling),
 		Declare declare => Declare(declare),
 		Assign assign => Assign(assign),
 		Loop loop => Loop(loop),
@@ -130,6 +157,54 @@ public class RockstarEnvironment(IRockstarIO io) {
 		var value = Strïng.Empty;
 		value.Append(Eval(ninja.Numbër));
 		return Assign(ninja.Variable, value);
+	}
+
+	private Result ExecuteLight(Light light) {
+		foreach (var variable in light.Variables) {
+			MarkSpotlight(variable);
+		}
+		return Result.Unknown;
+	}
+
+	private Result ExecuteChanneling(Channeling channeling) {
+		var loader = ModuleLoader
+			?? throw new("Module imports require a module loader (are you running from a file?)");
+
+		var resolvedPath = Engine.ModuleLoader.ResolvePath(channeling.ModulePath, SourceFilePath);
+		var exports = loader.Load(resolvedPath, IO);
+
+		// Store module exports for runtime 'from' lookups
+		loadedModuleExports[channeling.Module.Key] = exports;
+
+		if (channeling.Imports != null) {
+			// Selective import: only import specified symbols
+			foreach (var variable in channeling.Imports) {
+				var key = variable.Name;
+				if (exports.TryGet(key, out var value)) {
+					variables[variable.Key] = value;
+				} else {
+					throw new($"Module '{channeling.ModulePath}' does not export '{key}'");
+				}
+			}
+		} else {
+			// Import all exported symbols into current scope
+			foreach (var (name, value) in exports.All) {
+				variables[name.ToLower().Replace(" ", "_")] = value;
+			}
+		}
+
+		return Result.Unknown;
+	}
+
+	private Value ResolveModuleLookup(ModuleLookup lookup) {
+		var moduleKey = lookup.Module.Key;
+		if (!loadedModuleExports.TryGetValue(moduleKey, out var exports)) {
+			throw new($"Module '{lookup.Module.Name}' has not been channeled");
+		}
+		if (!exports.TryGet(lookup.Member.Name, out var value)) {
+			throw new($"Module '{lookup.Module.Name}' does not export '{lookup.Member.Name}'");
+		}
+		return value;
 	}
 
 	private Result Output(Output output) {
@@ -288,8 +363,16 @@ public class RockstarEnvironment(IRockstarIO io) {
 		=> Call(call, []);
 
 	private Result Call(FunctionCall call, Queue<Expression> bucket) {
-		var value = Lookup(call.Function);
-		if (value is not Closure closure) throw new($"'{call.Function.Name}' is not a function");
+		Value value;
+		string funcName;
+		if (call.FunctionExpression is ModuleLookup moduleLookup) {
+			value = ResolveModuleLookup(moduleLookup);
+			funcName = $"{moduleLookup.Member.Name} from {moduleLookup.Module.Name}";
+		} else {
+			value = Lookup(call.Function!);
+			funcName = call.Function!.Name;
+		}
+		if (value is not Closure closure) throw new($"'{funcName}' is not a function");
 		var names = closure.Functiön.Args.ToList();
 
 		List<Value> values = [];
@@ -299,7 +382,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 			values.Add(value);
 		}
 		if (call.Args.Count + bucket.Count < names.Count) {
-			throw new($"Not enough arguments supplied to function {call.Function.Name} - expected {names.Count} ({String.Join(", ", names.Select(v => v.Name))}), got {call.Args.Count}");
+			throw new($"Not enough arguments supplied to function {funcName} - expected {names.Count} ({String.Join(", ", names.Select(v => v.Name))}), got {call.Args.Count}");
 		}
 		while (values.Count < names.Count) values.Add(Eval(bucket.Dequeue()));
 		foreach (var expression in call.Args.Skip(names.Count)) bucket.Enqueue(expression);
@@ -371,6 +454,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 	public Value Eval(Expression expression) => expression switch {
 		Value value => value,
 		Binary binary => binary.Resolve(Eval),
+		ModuleLookup moduleLookup => ResolveModuleLookup(moduleLookup),
 		Lookup lookup => Lookup(lookup.Variable),
 		Variable v => Lookup(v),
 		Unary unary => unary.Resolve(Eval),
