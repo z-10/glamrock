@@ -1,8 +1,47 @@
 # Do you wanna get rocked?
 
-This is Rockstar, an esoteric programming language whose syntax is inspired by the lyrics to 80s hard rock and heavy metal songs.
+This is **GlamRock**, a fork of [Rockstar](https://github.com/RockstarLang/rockstar) — an esoteric programming language whose syntax is inspired by the lyrics to 80s hard rock and heavy metal songs.
+
+GlamRock extends Rockstar with practical language features while keeping every lyric singable.
 
 ![Rockstar Logotype](rockstar-logo-strapline-sticker.png)
+
+# GlamRock Extensions 💎
+
+These features are GlamRock additions, not part of standard Rockstar.
+
+### Modules (`featuring` / `spotlight`)
+
+Split your programs across files and control what's visible.
+
+**math.rock**
+```rockstar
+The Pi is 3.14159
+Add takes X and Y
+Give back X with Y
+
+Spotlight The Pi
+Spotlight Add
+```
+
+**main.rock**
+```rockstar
+Featuring "math.rock" as Math
+
+Let Add be Math at "Add"
+Let The sum be Add taking 3, 4
+Shout The sum
+
+Shout Math at "The Pi"
+```
+
+- `Spotlight` marks a variable or function as exported
+- `Featuring "file" as Name` imports exports into a namespace
+- `Featuring "file"` imports all exports directly into scope
+- Modules execute in isolation — no global leakage
+- Circular imports are detected and rejected
+- Full docs: [Modules](codewithrockstar.com/docs/13-modules.md)
+
 # What's Here
 
 Rockstar has three main components:

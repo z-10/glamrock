@@ -1,0 +1,7 @@
+Featuring "math-module.rock" as Math
+
+Let Add be Math at "Add"
+Let The sum be Add taking 3, 4
+Shout The sum (prints: 7)
+
+Shout Math at "The Pi" (prints: 3.14159)
