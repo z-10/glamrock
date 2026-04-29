@@ -166,7 +166,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 		var loader = ModuleLoader
 			?? throw new("Module imports require a module loader (are you running from a file?)");
 
-		var resolvedPath = Engine.ModuleLoader.ResolvePath(channeling.Path, SourceFilePath);
+		var resolvedPath = Engine.ModuleLoader.ResolvePath(channeling.ModulePath, SourceFilePath);
 		var exports = loader.Load(resolvedPath, IO);
 
 		if (channeling.Alias != null) {

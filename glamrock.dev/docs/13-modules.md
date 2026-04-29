@@ -47,7 +47,7 @@ Modules execute in their own isolated environment. Variables not marked with `sh
 
 ### How modules work
 
-* **File resolution**: Paths are relative to the importing file. The `.rock` extension is optional, so `Channeling math` and `Channeling math.rock` are equivalent.
+* **File resolution**: Module names follow variable naming conventions — spaces become underscores, names are lowercased. `Channeling Divine Math` resolves to `divine_math.rock`. Paths are relative to the importing file. The `.rock` extension is appended automatically.
 * **Caching**: Each module is parsed and executed only once, no matter how many times it's imported.
 * **Circular imports**: If module A imports module B which imports module A, GlamRock will throw an error rather than loop forever.
 * **Isolation**: Modules run in their own scope. Global variables in a module do not leak into the importer.
@@ -57,7 +57,7 @@ Modules execute in their own isolated environment. Variables not marked with `sh
 When you import a module with an alias, the exports are stored as a collection with string keys. Use `at` to access them:
 
 ```
-Channeling Math from math
+Channeling Math from Math Module
 
 (Access a variable)
 Shout Math at "The Pi"

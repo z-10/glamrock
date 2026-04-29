@@ -14,7 +14,7 @@ These features are GlamRock additions, not part of standard Rockstar.
 
 Split your programs across files and control what's visible.
 
-**math.rock**
+**math_module.rock**
 ```rockstar
 The Pi is 3.14159
 Add takes X and Y
@@ -26,7 +26,7 @@ Shining Add
 
 **main.rock**
 ```rockstar
-Channeling Math from math
+Channeling Math from Math Module
 
 Let Add be Math at "Add"
 Let The sum be Add taking 3, 4

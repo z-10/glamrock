@@ -73,12 +73,10 @@ shining_stmt <Statement>
 		{ new Shining(v) }
 
 channeling_stmt <Statement>
-	= channeling _ a:variable _ from _ p:module_path
+	= channeling _ a:variable _ from _ p:variable
 		{ new Channeling(p, a) }
-	/ channeling _ p:module_path
+	/ channeling _ p:variable
 		{ new Channeling(p) }
-
-module_path = ("" (letter / [0-9_/\\.\-])+)
 
 delist <VariableExpression>
 	= roll_list
