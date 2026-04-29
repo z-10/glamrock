@@ -71,7 +71,14 @@ public abstract class FixtureBase(ITestOutputHelper testOutputHelper) : Rockstar
 		var output = String.Empty;
 		try {
 			var inputs = rockFile.SimulateInputs();
-			(var result, output) = RunProgram(program, inputs);
+			string? ReadInput() => inputs != null && inputs.TryDequeue(out var result) ? result : null;
+			var env = new TestEnvironment(ReadInput);
+			// Set up module loader for files that use modules
+			var filePath = rockFile.UncrunchedFilePath;
+			env.SourceFilePath = Path.GetFullPath(filePath);
+			env.ModuleLoader = new ModuleLoader();
+			var result = env.Execute(program);
+			output = env.Output;
 			var expect = rockFile.ExpectedOutput;
 			if (String.IsNullOrEmpty(expect)) {
 				this.output.WriteLine(output);
