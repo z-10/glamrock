@@ -40,7 +40,7 @@ Shout Math at "The Pi"
 - `Featuring "file"` imports all exports directly into scope
 - Modules execute in isolation — no global leakage
 - Circular imports are detected and rejected
-- Full docs: [Modules](codewithrockstar.com/docs/13-modules.md)
+- Full docs: [Modules](https://glamrock.dev/docs/13-modules)
 
 # What's Here
 
@@ -48,7 +48,7 @@ Rockstar has three main components:
 
 * `/Starship` contains the Starship interpreter for Rockstar, built in C# and .NET
 * `/cm-lang-rockstar` contains the CodeMirror editor used on the Rockstar website
-* `/codewithrockstar.com` contains the Rockstar website, docs and examples
+* `/codewithrockstar.com` contains the GlamRock website (glamrock.dev), docs and examples
 
 ### Building Rockstar
 
@@ -72,18 +72,18 @@ dotnet publish ./Starship/Rockstar -o binaries -c Release
 
 That'll create a standalone binary executable in `binaries/rockstar`.
 
-The `codewithrockstar.com` website is built with Jekyll and hosted on GitHub Pages.
+The `glamrock.dev` website is built with Jekyll and hosted on GitHub Pages.
 
 The embedded Rockstar interpreter is the Starship engine compiled to run on web assembly:
 
 ```dotnetcli
 dotnet build ./Starship/Starship.sln
-dotnet publish ./Starship/Rockstar.Wasm -o codewithrockstar.com/wasm/ -c Debug
+dotnet publish ./Starship/Rockstar.Wasm -o glamrock.dev/wasm/ -c Debug
 ```
 
 ### Building with GitHub Actions
 
-Building codewithrockstar.com works like this:
+Building glamrock.dev works like this:
 
 **build-rockstar-2.0**
 - runs on Linux
@@ -109,16 +109,16 @@ Building codewithrockstar.com works like this:
 * Deploys the site to GitHub Pages
 ### Debug/Dev Mode Setup
 
-In dev mode, I use symbolic directory links between the various parts of the project. Rebuilding the .NET solution will rebuild the WASM interpreter, which Jekyll can see as `/wasm/**`, and trigger a site rebuild, and all the Rockstar code examples are part of both the `Rockstar.Test` .NET test suite project and the `codewithrockstar.com` site:
+In dev mode, I use symbolic directory links between the various parts of the project. Rebuilding the .NET solution will rebuild the WASM interpreter, which Jekyll can see as `/wasm/**`, and trigger a site rebuild, and all the Rockstar code examples are part of both the `Rockstar.Test` .NET test suite project and the `glamrock.dev` site:
 
 ```
-> cd codewithrockstar.com
+> cd glamrock.dev
 > mklink /d wasm ..\Starship\Rockstar.Wasm\bin\Debug\net8.0-browser
 > mklink /d examples ..\Starship\Rockstar.Test\programs\examples
 ```
 
 ```
-codewithrockstar.com
+glamrock.dev
   /wasm --> [ /Starship/Rockstar.Wasm/bin/Debug/net8.0-browser ]
   /examples --> [ /Starship/Rockstar.Test/programs/examples ]
   /index.html
