@@ -1,2 +1,16 @@
-Channel Math Module
-@dump
+(Test: divine and conjure shell execution)
+
+Shout "--- Divine with capture ---"
+Divine "echo hello world" into My Result
+Shout "stdout:"
+Shout My Result at 0
+Shout "exit code:"
+Shout My Result at 2
+
+Shout "--- Conjure direct output ---"
+Conjure "echo goodbye world"
+
+Shout "--- Divine without capture ---"
+Divine "echo direct output"
+
+Shout "--- Done ---"

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Rockstar.Engine.Expressions;
@@ -129,6 +130,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 	private Result Execute(Statement statement) => statement switch {
 		Output output => Output(output),
 		Light light => ExecuteLight(light),
+		Divine divine => ExecuteDivine(divine),
 		ScopedChannel scoped => ExecuteScopedChannel(scoped),
 		Channeling channeling => ExecuteChanneling(channeling),
 		Declare declare => Declare(declare),
@@ -146,7 +148,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 		Listen listen => Listen(listen),
 		Crement crement => Crement(crement),
 		Dump _ => Dump(),
-		Debug debug => Debug(debug),
+		Statements.Debug debug => Debug(debug),
 		ExpressionStatement e => ExpressionStatement(e),
 		Ninja n => Ninja(n),
 		ForInLoop loop => ForInLoop(loop),
@@ -165,6 +167,39 @@ public class RockstarEnvironment(IRockstarIO io) {
 			MarkSpotlight(variable);
 		}
 		return Result.Unknown;
+	}
+
+	private Result ExecuteDivine(Divine divine) {
+		var commandStr = Eval(divine.Command).ToStrïng().Value;
+
+		var isWindows = OperatingSystem.IsWindows();
+		var psi = new ProcessStartInfo {
+			FileName = isWindows ? "cmd.exe" : "/bin/sh",
+			Arguments = isWindows ? $"/c {commandStr}" : $"-c \"{commandStr.Replace("\"", "\\\"")}\"",
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			UseShellExecute = false,
+			CreateNoWindow = true
+		};
+
+		using var process = Process.Start(psi)
+			?? throw new("Failed to start process");
+		var stdout = process.StandardOutput.ReadToEnd();
+		var stderr = process.StandardError.ReadToEnd();
+		process.WaitForExit();
+		var exitCode = process.ExitCode;
+
+		if (divine.Target != null) {
+			var result = new Arräy();
+			result.Set([new Numbër(0)], new Strïng(stdout.TrimEnd('\r', '\n')));
+			result.Set([new Numbër(1)], new Strïng(stderr.TrimEnd('\r', '\n')));
+			result.Set([new Numbër(2)], new Numbër(exitCode));
+			SetVariable(divine.Target, result);
+			return new(result);
+		} else {
+			Write(stdout);
+			return new(new Numbër(exitCode));
+		}
 	}
 
 	private Result ExecuteChanneling(Channeling channeling) {
@@ -258,7 +293,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 		return new(value);
 	}
 
-	private Result Debug(Debug debug) {
+	private Result Debug(Statements.Debug debug) {
 		var value = Eval(debug.Expression);
 		Write("DEBUG: ");
 		if (debug.Expression is Lookup lookup) Write(lookup.Variable.Name + ": ");
