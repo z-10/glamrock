@@ -129,6 +129,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 	private Result Execute(Statement statement) => statement switch {
 		Output output => Output(output),
 		Light light => ExecuteLight(light),
+		ScopedChannel scoped => ExecuteScopedChannel(scoped),
 		Channeling channeling => ExecuteChanneling(channeling),
 		Declare declare => Declare(declare),
 		Assign assign => Assign(assign),
@@ -205,6 +206,49 @@ public class RockstarEnvironment(IRockstarIO io) {
 			throw new($"Module '{lookup.Module.Name}' does not export '{lookup.Member.Name}'");
 		}
 		return value;
+	}
+
+	private Result ExecuteScopedChannel(ScopedChannel scoped) {
+		var loader = ModuleLoader
+			?? throw new("Module imports require a module loader (are you running from a file?)");
+
+		var resolvedPath = Engine.ModuleLoader.ResolvePath(scoped.ModulePath, SourceFilePath);
+		var exports = loader.Load(resolvedPath, IO);
+
+		// Save previous state for restoration
+		var previousValues = new Dictionary<string, Value?>();
+		var moduleKey = scoped.Module.Key;
+		var hadModuleExport = loadedModuleExports.ContainsKey(moduleKey);
+		ModuleExports? previousModuleExport = hadModuleExport ? loadedModuleExports[moduleKey] : null;
+
+		loadedModuleExports[moduleKey] = exports;
+
+		// Import all exports, saving previous bindings
+		var importedKeys = new List<string>();
+		foreach (var (name, value) in exports.All) {
+			var key = name.ToLower().Replace(" ", "_");
+			importedKeys.Add(key);
+			previousValues[key] = variables.TryGetValue(key, out var prev) ? prev : null;
+			variables[key] = value;
+		}
+
+		try {
+			return Execute(scoped.Body);
+		} finally {
+			// Restore previous bindings
+			foreach (var key in importedKeys) {
+				if (previousValues.TryGetValue(key, out var prev) && prev != null) {
+					variables[key] = prev;
+				} else {
+					variables.Remove(key);
+				}
+			}
+			if (hadModuleExport) {
+				loadedModuleExports[moduleKey] = previousModuleExport!;
+			} else {
+				loadedModuleExports.Remove(moduleKey);
+			}
+		}
 	}
 
 	private Result Output(Output output) {

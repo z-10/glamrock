@@ -37,6 +37,7 @@ statement -memoize
 	= listen_stmt
 	/ output_stmt
 	/ shining_stmt
+	/ scoped_channel_stmt
 	/ channeling_stmt
 	/ function
 	/ function_call
@@ -79,6 +80,10 @@ channeling_stmt <Statement>
 		{ new Channeling(m, v.ToList()) }
 	/ channel _ m:variable
 		{ new Channeling(m) }
+
+scoped_channel_stmt <Statement>
+	= scoped_channel _ m:variable body:consequent
+		{ new ScopedChannel(m, body) }
 
 delist <VariableExpression>
 	= roll_list
@@ -537,6 +542,7 @@ keyword
 	/ as
 	/ as_great
 	/ channel
+	/ scoped_channel
 	/ from
 	/ light
 	/ as_small
@@ -626,6 +632,7 @@ every = 'every' !letter
 exit = 'exit' !letter
 exactly = 'exactly' !letter / 'totally' !letter / 'really' !letter
 channel = 'channel' !letter / 'bring' !letter
+scoped_channel = 'channeling' !letter / 'bringing' !letter
 false = "false" !letter / "lies" !letter / "no" !letter / "wrong"!letter
 for = 'for' !letter
 from = 'from' !letter
