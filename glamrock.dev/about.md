@@ -24,7 +24,7 @@ Features marked with 💎 in the docs are GlamRock extensions — they are not p
 
 | Extension | Keywords | Status |
 |-----------|----------|--------|
-| [Modules](/docs/13-modules) | `featuring`, `spotlight` | ✅ Implemented |
+| [Modules](/docs/13-modules) | `channel`, `bring`, `light`, `ignite`, `shine`, `beacon` | ✅ Implemented |
 | Shell execution | `summon` | 🔜 Planned |
 | File I/O | `etch`, `unearth` | 🔜 Planned |
 

@@ -10,7 +10,7 @@ GlamRock extends Rockstar with practical language features while keeping every l
 
 These features are GlamRock additions, not part of standard Rockstar.
 
-### Modules (`channeling` / `shining`)
+### Modules (`channel` / `light`)
 
 Split your programs across files and control what's visible.
 
@@ -20,25 +20,21 @@ The Pi is 3.14159
 Add takes X and Y
 Give back X with Y
 
-Shining The Pi
-Shining Add
+Light The Pi and Add
 ```
 
 **main.rock**
 ```rockstar
-Channeling Math from Math Module
+Channel Math Module
+Shout Add taking 3, 4
 
-Let Add be Math at "Add"
-Let The sum be Add taking 3, 4
-Shout The sum
-
-Shout Math at "The Pi"
+Channel Math Module's The Pi
+Shout The Pi
 ```
 
-- `Shining` marks a variable or function as exported
-- `Channeling Alias from module` imports exports into a namespace
-- `Channeling module` imports all exports directly into scope
-- `calling` and `bringing` are aliases for `channeling`
+- `Light` marks variables or functions as exported (aliases: `ignite`, `shine`, `beacon`)
+- `Channel Module` imports all exports into scope (alias: `bring`)
+- `Channel Module's Export` or `Channel Export from Module` for selective imports
 - Modules execute in isolation — no global leakage
 - Circular imports are detected and rejected
 - Full docs: [Modules](https://glamrock.dev/docs/13-modules)

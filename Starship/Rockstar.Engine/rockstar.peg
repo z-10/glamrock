@@ -69,14 +69,16 @@ enlistment <Statement>
 		{ new ExpressionStatement(d) }
 
 shining_stmt <Statement>
-	= shining _ v:assignable_or_error
-		{ new Shining(v) }
+	= light _ v:variable_list
+		{ new Light(v.ToList()) }
 
 channeling_stmt <Statement>
-	= channeling _ a:variable _ from _ p:variable
-		{ new Channeling(p, a) }
-	/ channeling _ p:variable
-		{ new Channeling(p) }
+	= channel _ m:variable "'s" _ v:variable_list
+		{ new Channeling(m, v.ToList()) }
+	/ channel _ v:variable_list _ from _ m:variable
+		{ new Channeling(m, v.ToList()) }
+	/ channel _ m:variable
+		{ new Channeling(m) }
 
 delist <VariableExpression>
 	= roll_list
@@ -530,9 +532,9 @@ keyword
 	= keywords_which_can_begin_an_expression
 	/ as
 	/ as_great
-	/ channeling
+	/ channel
 	/ from
-	/ shining
+	/ light
 	/ as_small
 	/ at
 	/ back
@@ -619,7 +621,7 @@ end = 'end' !letter / 'yeah' !letter / 'baby' !letter / 'oh' !letter
 every = 'every' !letter
 exit = 'exit' !letter
 exactly = 'exactly' !letter / 'totally' !letter / 'really' !letter
-channeling = 'channeling' !letter / 'calling' !letter / 'bringing' !letter
+channel = 'channel' !letter / 'bring' !letter
 false = "false" !letter / "lies" !letter / "no" !letter / "wrong"!letter
 for = 'for' !letter
 from = 'from' !letter
@@ -658,7 +660,7 @@ return = 'return' !letter / 'giving' !letter / 'give' !letter / 'send' !letter
 roll = 'roll' !letter
 says = 'say' !letter / 'says' !letter / 'said' !letter
 split = 'cut' !letter / 'split' !letter / 'shatter' !letter
-shining = 'shining' !letter / 'lighting' !letter / 'beaconing' !letter
+light = 'light' !letter / 'ignite' !letter / 'shine' !letter / 'beacon' !letter
 takes = 'takes' !letter / 'wants' !letter
 taking = 'taking' !letter
 than = 'than' !letter

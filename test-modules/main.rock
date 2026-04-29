@@ -1,12 +1,5 @@
-Channeling Math from Math Module
+Channel Math Module
 
-The radius is 5
-Let Multiply be Math at "Multiply"
-Let The area be Multiply taking The radius, The radius
-Shout The area
-
-Let Add be Math at "Add"
-Let The sum be Add taking 3, 4
-Shout The sum
-
-Shout Math at "The Pi"
+Shout Add taking 3, 4
+Shout Multiply taking 5, 5
+Shout The Pi

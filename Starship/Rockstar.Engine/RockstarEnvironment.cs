@@ -126,7 +126,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 	private Result Execute(Statement statement) => statement switch {
 		Output output => Output(output),
-		Shining shining => ExecuteShining(shining),
+		Light light => ExecuteLight(light),
 		Channeling channeling => ExecuteChanneling(channeling),
 		Declare declare => Declare(declare),
 		Assign assign => Assign(assign),
@@ -157,8 +157,10 @@ public class RockstarEnvironment(IRockstarIO io) {
 		return Assign(ninja.Variable, value);
 	}
 
-	private Result ExecuteShining(Shining shining) {
-		MarkSpotlight(shining.Variable);
+	private Result ExecuteLight(Light light) {
+		foreach (var variable in light.Variables) {
+			MarkSpotlight(variable);
+		}
 		return Result.Unknown;
 	}
 
@@ -169,13 +171,16 @@ public class RockstarEnvironment(IRockstarIO io) {
 		var resolvedPath = Engine.ModuleLoader.ResolvePath(channeling.ModulePath, SourceFilePath);
 		var exports = loader.Load(resolvedPath, IO);
 
-		if (channeling.Alias != null) {
-			// Namespace import: store exports as an array with string keys
-			var ns = new Arräy();
-			foreach (var (name, value) in exports.All) {
-				ns.Set([new Strïng(name)], value);
+		if (channeling.Imports != null) {
+			// Selective import: only import specified symbols
+			foreach (var variable in channeling.Imports) {
+				var key = variable.Name;
+				if (exports.TryGet(key, out var value)) {
+					variables[variable.Key] = value;
+				} else {
+					throw new($"Module '{channeling.ModulePath}' does not export '{key}'");
+				}
 			}
-			SetVariable(channeling.Alias, ns);
 		} else {
 			// Import all exported symbols into current scope
 			foreach (var (name, value) in exports.All) {
