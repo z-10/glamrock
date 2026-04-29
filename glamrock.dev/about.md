@@ -32,5 +32,4 @@ Features marked with 💎 in the docs are GlamRock extensions — they are not p
 
 - **GlamRock source**: [github.com/z-10/glamrock](https://github.com/z-10/glamrock)
 - **Original Rockstar**: [codewithrockstar.com](https://codewithrockstar.com)
-- **Rockstar community**: [discord.gg/W5x52ZAKUh](https://discord.gg/W5x52ZAKUh)
-- **Rockstar merch**: [shop.codewithrockstar.com](https://shop.codewithrockstar.com)
+
