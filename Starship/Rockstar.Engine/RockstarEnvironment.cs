@@ -179,7 +179,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 		} else {
 			// Import all exported symbols into current scope
 			foreach (var (name, value) in exports.All) {
-				variables[name] = value;
+				variables[name.ToLower().Replace(" ", "_")] = value;
 			}
 		}
 
