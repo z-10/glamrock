@@ -1,0 +1,35 @@
+---
+layout: table_wrappers
+---
+
+<!DOCTYPE html>
+
+<html lang="{{ site.lang | default: 'en-US' }}" class="{{ page.html_class | default: " page" }}">
+{% include head.html %}
+
+<body>
+	<header>
+		<h1><a href="/">GlamRock</a></h1>
+		<h2>Rockstar, but with the glam turned up to 11</h2>
+	</header>
+	<nav>
+		<a href="/">Home</a>
+		<a href="/docs">Docs</a>
+		<a href="/online">Try It</a>
+		<a href="/about">About</a>
+	</nav>
+	{{ content }}
+	<footer>
+		<div>
+			glamrock is a fork of <a href="https://codewithrockstar.com">rockstar</a>,
+			created by <a href="https://dylanbeattie.net/">dylan beattie</a>
+			• original copyright © 2018-2024 dylan beattie
+		</div>
+		<div>
+			<a href="/code-of-conduct">code of conduct</a>
+			• <a href="https://github.com/z-10/glamrock">code on github</a>
+		</div>
+	</footer>
+</body>
+
+</html>
