@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Rockstar.Engine.Expressions;
+using Rockstar.Engine.Interop;
 using Rockstar.Engine.Statements;
 using Rockstar.Engine.Values;
 
@@ -134,6 +135,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 		Divine divine => ExecuteDivine(divine),
 		ScopedChannel scoped => ExecuteScopedChannel(scoped),
 		Channeling channeling => ExecuteChanneling(channeling),
+		Invoke invoke => ExecuteInvoke(invoke),
 		Declare declare => Declare(declare),
 		Assign assign => Assign(assign),
 		Loop loop => Loop(loop),
@@ -271,6 +273,76 @@ public class RockstarEnvironment(IRockstarIO io) {
 				loadedModuleExports.Remove(moduleKey);
 			}
 		}
+	}
+
+	private readonly Dictionary<string, NativeLibraryBinding> nativeBindings = new(StringComparer.OrdinalIgnoreCase);
+
+	private Result ExecuteInvoke(Invoke invoke) {
+		var tracklistPath = invoke.TracklistPath;
+
+		// Resolve .tracklist file using the module loader's path resolution
+		var loader = ModuleLoader
+			?? throw new("Invoke requires a module loader (are you running from a file?)");
+
+		var resolvedPath = loader.ResolvePath(tracklistPath, SourceFilePath);
+		// Swap .rock extension for .tracklist
+		if (resolvedPath.EndsWith(".rock", StringComparison.OrdinalIgnoreCase)) {
+			resolvedPath = resolvedPath[..^5] + ".tracklist";
+		}
+
+		if (!File.Exists(resolvedPath)) {
+			throw new FileNotFoundException($"Tracklist not found: {resolvedPath}");
+		}
+
+		var source = File.ReadAllText(resolvedPath);
+		var parser = new TracklistParser();
+		var tracklist = parser.Parse(source, resolvedPath);
+
+		var binding = new NativeLibraryBinding(tracklist);
+		nativeBindings[tracklistPath] = binding;
+
+		// Register each track as a NativeTrackValue in the current scope
+		foreach (var (name, track) in binding.Tracks) {
+			var key = name.ToLower().Replace(" ", "_");
+			variables[key] = new NativeTrackValue(track);
+		}
+
+		return Result.Unknown;
+	}
+
+	private Result CallNativeTrack(NativeTrackValue trackValue, FunctionCall call) {
+		var track = trackValue.Track;
+		var def = track.Definition;
+
+		// Evaluate args, but preserve variable references for sigil params
+		var args = new Value[call.Args.Count];
+		var argVariables = new Variable?[call.Args.Count];
+
+		for (int i = 0; i < call.Args.Count; i++) {
+			var param = i < def.Parameters.Length ? def.Parameters[i] : null;
+			var argExpr = call.Args[i];
+
+			if (param is { IsSigil: true } && argExpr is Lookup lookup) {
+				// Sigil: remember the variable for write-back
+				argVariables[i] = lookup.Variable;
+				args[i] = Nüll.Instance; // placeholder, native side allocates
+			} else {
+				args[i] = argExpr is FunctionCall nestedCall
+					? Call(nestedCall).Value
+					: Eval(argExpr);
+			}
+		}
+
+		var result = track.Call(args, out var sigilOutputs);
+
+		// Write sigil outputs back into the caller's variables
+		foreach (var (idx, value) in sigilOutputs) {
+			if (argVariables[idx] != null) {
+				SetVariable(argVariables[idx]!, value);
+			}
+		}
+
+		return new(result);
 	}
 
 	private Result Output(Output output) {
@@ -455,6 +527,10 @@ public class RockstarEnvironment(IRockstarIO io) {
 		} else {
 			value = Lookup(call.Function!);
 			funcName = call.Function!.Name;
+		}
+		// Native track dispatch — handles sigil output params specially
+		if (value is NativeTrackValue trackValue) {
+			return CallNativeTrack(trackValue, call);
 		}
 		if (value is not Closure closure) throw new($"'{funcName}' is not a function");
 		var names = closure.Functiön.Args.ToList();
