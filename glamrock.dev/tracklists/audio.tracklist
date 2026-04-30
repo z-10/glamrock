@@ -1,0 +1,29 @@
+ALBUM glamrock-audio.js
+
+TRACK Play Note FEATURING playNote
+  TAKES number, number
+  GIVES nothing
+
+TRACK Play Chord FEATURING playChord
+  TAKES string, number
+  GIVES nothing
+
+TRACK Set Volume FEATURING setVolume
+  TAKES number
+  GIVES nothing
+
+TRACK Set Tempo FEATURING setTempo
+  TAKES number
+  GIVES nothing
+
+TRACK Set Instrument FEATURING setInstrument
+  TAKES string
+  GIVES nothing
+
+TRACK Rest FEATURING rest
+  TAKES number
+  GIVES nothing
+
+TRACK Play Frequency FEATURING playFrequency
+  TAKES number, number
+  GIVES nothing

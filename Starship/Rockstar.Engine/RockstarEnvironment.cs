@@ -40,6 +40,12 @@ public class RockstarEnvironment(IRockstarIO io) {
 	public string? SourceFilePath { get; set; }
 	public ModuleLoaderBase? ModuleLoader { get; set; }
 	public CommandExecutorBase? CommandExecutor { get; set; }
+	/// <summary>
+	/// Host-provided track call handler for WASM/sandboxed environments.
+	/// Signature: (trackName, argsJson) => resultJson
+	/// When set, Know/Invoke uses this instead of NativeLibrary.
+	/// </summary>
+	public Func<string, string, string>? TrackCallHandler { get; set; }
 
 	private readonly Dictionary<string, ModuleExports> loadedModuleExports = new(StringComparer.OrdinalIgnoreCase);
 
@@ -280,31 +286,52 @@ public class RockstarEnvironment(IRockstarIO io) {
 	private Result ExecuteInvoke(Invoke invoke) {
 		var tracklistPath = invoke.TracklistPath;
 
-		// Resolve .tracklist file using the module loader's path resolution
-		var loader = ModuleLoader
-			?? throw new("Invoke requires a module loader (are you running from a file?)");
+		// Resolve tracklist source — either from file system or module resolver
+		string source;
+		string? resolvedPath = null;
 
-		var resolvedPath = loader.ResolvePath(tracklistPath, SourceFilePath);
-		// Swap .rock extension for .tracklist
-		if (resolvedPath.EndsWith(".rock", StringComparison.OrdinalIgnoreCase)) {
-			resolvedPath = resolvedPath[..^5] + ".tracklist";
+		if (ModuleLoader != null) {
+			resolvedPath = ModuleLoader.ResolvePath(tracklistPath, SourceFilePath);
+			if (resolvedPath.EndsWith(".rock", StringComparison.OrdinalIgnoreCase)) {
+				resolvedPath = resolvedPath[..^5] + ".tracklist";
+			}
 		}
 
-		if (!File.Exists(resolvedPath)) {
-			throw new FileNotFoundException($"Tracklist not found: {resolvedPath}");
+		// Try loading tracklist content
+		if (ModuleLoader is ModuleLoader fsLoader && resolvedPath != null && File.Exists(resolvedPath)) {
+			source = File.ReadAllText(resolvedPath);
+		} else if (ModuleLoader != null) {
+			// WASM path: try loading via module resolver (tracklist served from JS)
+			try {
+				var altPath = tracklistPath + ".tracklist";
+				source = ModuleLoader.GetType().GetMethod("LoadSource",
+					System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+					?.Invoke(ModuleLoader, [altPath]) as string
+					?? throw new FileNotFoundException($"Tracklist not found: {tracklistPath}");
+			} catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException is FileNotFoundException) {
+				throw tie.InnerException;
+			}
+		} else {
+			throw new("Invoke requires a module loader (are you running from a file?)");
 		}
 
-		var source = File.ReadAllText(resolvedPath);
 		var parser = new TracklistParser();
-		var tracklist = parser.Parse(source, resolvedPath);
+		var tracklist = parser.Parse(source, resolvedPath ?? tracklistPath);
 
-		var binding = new NativeLibraryBinding(tracklist);
-		nativeBindings[tracklistPath] = binding;
-
-		// Register each track as a NativeTrackValue in the current scope
-		foreach (var (name, track) in binding.Tracks) {
-			var key = name.ToLower().Replace(" ", "_");
-			variables[key] = new NativeTrackValue(track);
+		if (TrackCallHandler != null) {
+			// WASM/host mode: register as HostTrackValues backed by the JS callback
+			foreach (var def in tracklist.Tracks) {
+				var key = def.GlamRockName.ToLower().Replace(" ", "_");
+				variables[key] = new HostTrackValue(def, TrackCallHandler);
+			}
+		} else {
+			// Desktop mode: load native library
+			var binding = new NativeLibraryBinding(tracklist);
+			nativeBindings[tracklistPath] = binding;
+			foreach (var (name, track) in binding.Tracks) {
+				var key = name.ToLower().Replace(" ", "_");
+				variables[key] = new NativeTrackValue(track);
+			}
 		}
 
 		return Result.Unknown;
@@ -336,6 +363,37 @@ public class RockstarEnvironment(IRockstarIO io) {
 		var result = track.Call(args, out var sigilOutputs);
 
 		// Write sigil outputs back into the caller's variables
+		foreach (var (idx, value) in sigilOutputs) {
+			if (argVariables[idx] != null) {
+				SetVariable(argVariables[idx]!, value);
+			}
+		}
+
+		return new(result);
+	}
+
+	private Result CallHostTrack(HostTrackValue hostTrack, FunctionCall call) {
+		var def = hostTrack.Definition;
+
+		var args = new Value[call.Args.Count];
+		var argVariables = new Variable?[call.Args.Count];
+
+		for (int i = 0; i < call.Args.Count; i++) {
+			var param = i < def.Parameters.Length ? def.Parameters[i] : null;
+			var argExpr = call.Args[i];
+
+			if (param is { IsSigil: true } && argExpr is Lookup lookup) {
+				argVariables[i] = lookup.Variable;
+				args[i] = Nüll.Instance;
+			} else {
+				args[i] = argExpr is FunctionCall nestedCall
+					? Call(nestedCall).Value
+					: Eval(argExpr);
+			}
+		}
+
+		var result = hostTrack.Call(args, out var sigilOutputs);
+
 		foreach (var (idx, value) in sigilOutputs) {
 			if (argVariables[idx] != null) {
 				SetVariable(argVariables[idx]!, value);
@@ -531,6 +589,10 @@ public class RockstarEnvironment(IRockstarIO io) {
 		// Native track dispatch — handles sigil output params specially
 		if (value is NativeTrackValue trackValue) {
 			return CallNativeTrack(trackValue, call);
+		}
+		// Host track dispatch (WASM) — same sigil handling via JS callback
+		if (value is HostTrackValue hostTrack) {
+			return CallHostTrack(hostTrack, call);
 		}
 		if (value is not Closure closure) throw new($"'{funcName}' is not a function");
 		var names = closure.Functiön.Args.ToList();
