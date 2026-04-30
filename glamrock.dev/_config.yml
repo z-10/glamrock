@@ -1,5 +1,5 @@
 title: GlamRock
-tagline: Rockstar, but with the glam turned up to 11.
+tagline: Rockstar, but with more makeup and glitter.
 theme: just-the-docs
 
 url: https://glamrock.dev
@@ -9,7 +9,7 @@ defaults:
       path: ""
     values:
       title: GlamRock
-      tagline: Rockstar, but with the glam turned up to 11.
+      tagline: Rockstar, but with more makeup and glitter.
       image: /images/rockstar-og-image.jpg
       description: "Rockstar is an esoteric programming language based on the ‘lyrical conventions of 1980s hard rock songs and power ballads.’. It was created by Dylan Beattie in 2018."
 
@@ -17,4 +17,6 @@ color_scheme: darkstar
 
 include:
  - _framework
+
+
 

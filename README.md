@@ -4,7 +4,7 @@ This is **GlamRock**, a fork of [Rockstar](https://github.com/RockstarLang/rocks
 
 GlamRock extends Rockstar with practical language features while keeping every lyric singable.
 
-![Rockstar Logotype](rockstar-logo-strapline-sticker.png)
+![GlamRock](glamrock-logo.svg)
 
 # GlamRock Extensions 💎
 

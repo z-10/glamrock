@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 240">
+  <defs>
+    <linearGradient id="glam" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff1493"/>
+      <stop offset="25%" style="stop-color:#ff69b4"/>
+      <stop offset="50%" style="stop-color:#da70d6"/>
+      <stop offset="75%" style="stop-color:#9370db"/>
+      <stop offset="100%" style="stop-color:#ffcc00"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="sparkle">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="700" height="240" rx="16" fill="#0d0d1a"/>
+  <!-- Glitter particles -->
+  <circle cx="45" cy="35" r="2" fill="#ffcc00" opacity="0.9" filter="url(#sparkle)"/>
+  <circle cx="120" cy="20" r="1.5" fill="#ff69b4" opacity="0.8" filter="url(#sparkle)"/>
+  <circle cx="200" cy="45" r="2.5" fill="#da70d6" opacity="0.7" filter="url(#sparkle)"/>
+  <circle cx="310" cy="15" r="1.8" fill="#ffcc00" opacity="0.9" filter="url(#sparkle)"/>
+  <circle cx="420" cy="40" r="2" fill="#ff1493" opacity="0.8" filter="url(#sparkle)"/>
+  <circle cx="530" cy="25" r="1.5" fill="#9370db" opacity="0.9" filter="url(#sparkle)"/>
+  <circle cx="620" cy="50" r="2.2" fill="#ffcc00" opacity="0.7" filter="url(#sparkle)"/>
+  <circle cx="80" cy="130" r="1.5" fill="#ff69b4" opacity="0.6" filter="url(#sparkle)"/>
+  <circle cx="160" cy="180" r="2" fill="#da70d6" opacity="0.5" filter="url(#sparkle)"/>
+  <circle cx="350" cy="190" r="1.8" fill="#ffcc00" opacity="0.7" filter="url(#sparkle)"/>
+  <circle cx="500" cy="170" r="2.5" fill="#ff1493" opacity="0.6" filter="url(#sparkle)"/>
+  <circle cx="600" cy="200" r="1.5" fill="#9370db" opacity="0.8" filter="url(#sparkle)"/>
+  <circle cx="660" cy="120" r="2" fill="#ffcc00" opacity="0.9" filter="url(#sparkle)"/>
+  <circle cx="30" cy="200" r="1.8" fill="#da70d6" opacity="0.7" filter="url(#sparkle)"/>
+  <circle cx="250" cy="210" r="2" fill="#ff69b4" opacity="0.5" filter="url(#sparkle)"/>
+  <circle cx="470" cy="220" r="1.5" fill="#ffcc00" opacity="0.8" filter="url(#sparkle)"/>
+  <circle cx="580" cy="140" r="2.2" fill="#ff1493" opacity="0.6" filter="url(#sparkle)"/>
+  <circle cx="140" cy="90" r="1.2" fill="#9370db" opacity="0.9" filter="url(#sparkle)"/>
+  <circle cx="400" cy="80" r="1.8" fill="#ffcc00" opacity="0.7" filter="url(#sparkle)"/>
+  <circle cx="550" cy="90" r="2" fill="#da70d6" opacity="0.8" filter="url(#sparkle)"/>
+  <!-- Stars -->
+  <text x="95" cy="60" font-size="16" fill="#ffcc00" opacity="0.6">&#x2726;</text>
+  <text x="380" y="55" font-size="20" fill="#ff69b4" opacity="0.5">&#x2726;</text>
+  <text x="640" y="45" font-size="14" fill="#da70d6" opacity="0.7">&#x2726;</text>
+  <text x="50" y="190" font-size="12" fill="#ffcc00" opacity="0.4">&#x2726;</text>
+  <text x="560" y="210" font-size="18" fill="#9370db" opacity="0.5">&#x2726;</text>
+  <!-- Main text -->
+  <text x="350" y="115" font-family="Georgia, 'Times New Roman', serif" font-size="90" font-weight="bold" font-style="italic" fill="url(#glam)" text-anchor="middle" letter-spacing="6" filter="url(#glow)">
+    Glam Rock
+  </text>
+  <!-- Tagline -->
+  <text x="350" y="160" font-family="Georgia, 'Times New Roman', serif" font-size="18" fill="#aaa" text-anchor="middle" letter-spacing="3">
+    ROCKSTAR, BUT WITH MORE MAKEUP AND GLITTER
+  </text>
+  <!-- Diamond -->
+  <text x="350" y="200" font-size="22" text-anchor="middle">&#x1F48E;</text>
+</svg>
