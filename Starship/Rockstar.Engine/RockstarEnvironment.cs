@@ -38,6 +38,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 	public string? SourceFilePath { get; set; }
 	public ModuleLoaderBase? ModuleLoader { get; set; }
+	public CommandExecutorBase? CommandExecutor { get; set; }
 
 	private readonly Dictionary<string, ModuleExports> loadedModuleExports = new(StringComparer.OrdinalIgnoreCase);
 
@@ -172,33 +173,19 @@ public class RockstarEnvironment(IRockstarIO io) {
 	private Result ExecuteDivine(Divine divine) {
 		var commandStr = Eval(divine.Command).ToStrïng().Value;
 
-		var isWindows = OperatingSystem.IsWindows();
-		var psi = new ProcessStartInfo {
-			FileName = isWindows ? "cmd.exe" : "/bin/sh",
-			Arguments = isWindows ? $"/c {commandStr}" : $"-c \"{commandStr.Replace("\"", "\\\"")}\"",
-			RedirectStandardOutput = true,
-			RedirectStandardError = true,
-			UseShellExecute = false,
-			CreateNoWindow = true
-		};
-
-		using var process = Process.Start(psi)
-			?? throw new("Failed to start process");
-		var stdout = process.StandardOutput.ReadToEnd();
-		var stderr = process.StandardError.ReadToEnd();
-		process.WaitForExit();
-		var exitCode = process.ExitCode;
+		var executor = CommandExecutor ?? new ProcessCommandExecutor();
+		var cmdResult = executor.Execute(commandStr);
 
 		if (divine.Target != null) {
 			var result = new Arräy();
-			result.Set([new Numbër(0)], new Strïng(stdout.TrimEnd('\r', '\n')));
-			result.Set([new Numbër(1)], new Strïng(stderr.TrimEnd('\r', '\n')));
-			result.Set([new Numbër(2)], new Numbër(exitCode));
+			result.Set([new Numbër(0)], new Strïng(cmdResult.Stdout));
+			result.Set([new Numbër(1)], new Strïng(cmdResult.Stderr));
+			result.Set([new Numbër(2)], new Numbër(cmdResult.ExitCode));
 			SetVariable(divine.Target, result);
 			return new(result);
 		} else {
-			Write(stdout);
-			return new(new Numbër(exitCode));
+			Write(cmdResult.Stdout);
+			return new(new Numbër(cmdResult.ExitCode));
 		}
 	}
 

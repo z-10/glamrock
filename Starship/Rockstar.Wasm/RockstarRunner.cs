@@ -37,6 +37,23 @@ public class WasmModuleLoader : ModuleLoaderBase {
 	}
 }
 
+public class WasmCommandExecutor : CommandExecutorBase {
+	private readonly Func<string, string> executeCommand;
+
+	public WasmCommandExecutor(Func<string, string> executeCommand) {
+		this.executeCommand = executeCommand;
+	}
+
+	public override CommandResult Execute(string command) {
+		try {
+			var stdout = executeCommand(command);
+			return new CommandResult(stdout ?? "", "", 0);
+		} catch (Exception ex) {
+			return new CommandResult("", ex.Message, 1);
+		}
+	}
+}
+
 public partial class RockstarRunner {
 
 	[JSExport]
@@ -51,13 +68,14 @@ public partial class RockstarRunner {
 	[JSExport]
 	public static Task<string> Run(string source,
 		[JSMarshalAs<JSType.Function<JSType.String>>] Action<string> output, string? input = null, string? args = null) {
-		return RunWithModules(source, output, null, input, args);
+		return RunWithModules(source, output, null, null, input, args);
 	}
 
 	[JSExport]
 	public static Task<string> RunWithModules(string source,
 		[JSMarshalAs<JSType.Function<JSType.String>>] Action<string> output,
 		[JSMarshalAs<JSType.Function<JSType.String, JSType.String>>] Func<string, string?>? moduleResolver = null,
+		[JSMarshalAs<JSType.Function<JSType.String, JSType.String>>] Func<string, string>? commandExecutor = null,
 		string? input = null, string? args = null) {
 		Console.WriteLine("Running GlamRock program");
 		var inputQueue = new Queue<string>((input ?? "").Split(Environment.NewLine));
@@ -68,6 +86,9 @@ public partial class RockstarRunner {
 			if (moduleResolver != null) {
 				env.ModuleLoader = new WasmModuleLoader(moduleResolver);
 				env.SourceFilePath = "main.rock";
+			}
+			if (commandExecutor != null) {
+				env.CommandExecutor = new WasmCommandExecutor(commandExecutor);
 			}
 			try {
 				var program = parser.Parse(source);
