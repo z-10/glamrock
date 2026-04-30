@@ -1,5 +1,32 @@
-Channel Math Module
+(Test: import all, selective, from expression, scoped blocks, shell execution)
 
+Shout "--- Import all ---"
+Channel Math Module
 Shout Add taking 3, 4
 Shout Multiply taking 5, 5
 Shout The Pi
+Shout The Secret
+
+Shout "--- Selective import with possessive ---"
+Channel Math Module's Multiply
+Shout Multiply taking 7, 7
+
+Shout "--- From expression ---"
+Shout Add from Math Module taking 10, 20
+Shout The Pi from Math Module
+
+Shout "--- Scoped block (no prior permanent import of Multiply) ---"
+Channeling Math Module
+Shout Multiply taking 100, 2
+Yeah
+
+Shout "--- One-liner scope ---"
+Bringing Math Module Shout Multiply taking 3, 3
+
+Shout "--- Shell execution ---"
+Divine "echo hello from the shell" into My Result
+Shout My Result at 0
+Shout My Result at 2
+Conjure "echo conjured"
+
+Shout "--- Done ---"

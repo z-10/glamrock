@@ -1,2 +1,24 @@
-Channel Math Module's The Secret
+(Test: module isolation - exported vs non-exported)
+
+Shout "--- Isolation test ---"
+Channel Math Module's The Pi
+Shout "The Pi (exported):"
+Shout The Pi
+Shout "The Secret (not exported):"
 Shout The Secret
+
+Shout "--- Selective import ---"
+Channel Math Module's Add
+Shout "Add works:"
+Shout Add taking 1, 1
+
+Shout "--- Scoped cleanup ---"
+X is 99
+Channeling Math Module
+Shout "Inside block, Multiply:"
+Shout Multiply taking 5, 5
+Yeah
+Shout "After block, X restored:"
+Shout X
+Shout "After block, Multiply gone:"
+Shout Multiply

@@ -37,6 +37,7 @@ statement -memoize
 	= listen_stmt
 	/ output_stmt
 	/ shining_stmt
+	/ divine_stmt
 	/ scoped_channel_stmt
 	/ channeling_stmt
 	/ function
@@ -72,6 +73,12 @@ enlistment <Statement>
 shining_stmt <Statement>
 	= light _ v:variable_list
 		{ new Light(v.ToList()) }
+
+divine_stmt <Statement>
+	= divine _ e:expression_or_error _ into _ v:assignable_or_error
+		{ new Divine(e, v) }
+	/ divine _ e:expression_or_error
+		{ new Divine(e) }
 
 channeling_stmt <Statement>
 	= channel _ m:variable "'s" _ v:variable_list
@@ -542,6 +549,7 @@ keyword
 	/ as
 	/ as_great
 	/ channel
+	/ divine
 	/ scoped_channel
 	/ from
 	/ light
@@ -632,6 +640,7 @@ every = 'every' !letter
 exit = 'exit' !letter
 exactly = 'exactly' !letter / 'totally' !letter / 'really' !letter
 channel = 'channel' !letter / 'bring' !letter
+divine = 'divine' !letter / 'conjure' !letter
 scoped_channel = 'channeling' !letter / 'bringing' !letter
 false = "false" !letter / "lies" !letter / "no" !letter / "wrong"!letter
 for = 'for' !letter
