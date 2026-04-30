@@ -1,0 +1,442 @@
+---
+title: Playground
+nav_order: "9998"
+layout: page
+nav_exclude: true
+---
+
+<style>
+	html, body { overflow: hidden; margin: 0; padding: 0; }
+	header, nav, footer { display: none; }
+	main {
+		position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+		display: grid;
+		grid-template-rows: 40px 1fr 8px 200px 32px;
+		font-family: 'Segoe UI', system-ui, sans-serif;
+		background: #1a1a2e;
+		color: #e0e0e0;
+	}
+
+	/* Top bar */
+	.top-bar {
+		display: flex; align-items: center; gap: 8px;
+		background: #16213e; padding: 0 12px;
+		border-bottom: 1px solid #333;
+	}
+	.top-bar .logo { font-weight: bold; font-size: 16px;
+		background: linear-gradient(90deg, #e91e90, #9b59b6, #f1c40f);
+		-webkit-background-clip: text; -webkit-text-fill-color: transparent;
+	}
+	.top-bar .spacer { flex: 1; }
+	.btn {
+		background: #2d3748; color: #e0e0e0; border: 1px solid #555;
+		padding: 4px 14px; border-radius: 4px; cursor: pointer; font-size: 13px;
+	}
+	.btn:hover { background: #4a5568; }
+	.btn-run { background: #2f855a; border-color: #38a169; }
+	.btn-run:hover { background: #38a169; }
+
+	/* Tab bar */
+	.tab-bar {
+		display: flex; gap: 0; background: #0f3460;
+		overflow-x: auto; white-space: nowrap;
+	}
+	.tab {
+		padding: 6px 16px; cursor: pointer; font-size: 13px;
+		background: #16213e; border-right: 1px solid #333;
+		border-bottom: 2px solid transparent;
+		display: flex; align-items: center; gap: 6px;
+		user-select: none;
+	}
+	.tab.active { background: #1a1a2e; border-bottom-color: #e91e90; color: #fff; }
+	.tab:hover { background: #1a1a2e; }
+	.tab .close-tab {
+		font-size: 14px; line-height: 1; opacity: 0.5; cursor: pointer;
+		padding: 0 2px; border-radius: 2px;
+	}
+	.tab .close-tab:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+	.tab-add {
+		padding: 6px 12px; cursor: pointer; font-size: 16px; color: #888;
+		display: flex; align-items: center;
+	}
+	.tab-add:hover { color: #fff; }
+
+	/* Editor area */
+	.editor-area { position: relative; overflow: hidden; }
+	.editor-area textarea {
+		width: 100%; height: 100%; box-sizing: border-box;
+		background: #1a1a2e; color: #e0e0e0;
+		border: none; outline: none; resize: none;
+		font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+		font-size: 14px; line-height: 1.6; padding: 12px; tab-size: 4;
+	}
+
+	/* Resize handle */
+	.resize-handle {
+		background: #333; cursor: row-resize;
+		display: flex; align-items: center; justify-content: center;
+	}
+	.resize-handle::after {
+		content: ''; width: 40px; height: 3px;
+		background: #666; border-radius: 2px;
+	}
+
+	/* Output panel */
+	.output-panel {
+		display: flex; flex-direction: column; background: #0d0d1a;
+		border-top: 1px solid #333;
+	}
+	.output-tabs {
+		display: flex; background: #111; border-bottom: 1px solid #333;
+	}
+	.output-tab {
+		padding: 4px 14px; font-size: 12px; cursor: pointer;
+		color: #888; border-bottom: 2px solid transparent;
+	}
+	.output-tab.active { color: #fff; border-bottom-color: #9b59b6; }
+	.output-content {
+		flex: 1; overflow-y: auto; padding: 8px 12px;
+		font-family: 'Cascadia Code', 'Consolas', monospace;
+		font-size: 13px; white-space: pre-wrap; line-height: 1.5;
+	}
+	.output-content .error { color: #e74c3c; }
+	.output-content .shell { color: #3498db; }
+	.output-content .info { color: #888; }
+
+	/* Status bar */
+	.status-bar {
+		display: flex; align-items: center; gap: 12px;
+		background: #16213e; padding: 0 12px; font-size: 12px; color: #888;
+		border-top: 1px solid #333;
+	}
+	.status-bar .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+	.status-dot.loading { background: #f39c12; }
+	.status-dot.ready { background: #2ecc71; }
+	.status-dot.error { background: #e74c3c; }
+</style>
+
+<main>
+	<div class="top-bar">
+		<span class="logo">✦ GlamRock Playground</span>
+		<span class="spacer"></span>
+		<button class="btn btn-run" id="btn-run" disabled>▶ Run</button>
+		<button class="btn" id="btn-parse" disabled>🌳 Parse</button>
+		<button class="btn" id="btn-clear">✕ Clear</button>
+	</div>
+
+	<div style="display:flex; flex-direction:column; overflow:hidden;">
+		<div class="tab-bar" id="tab-bar">
+			<div class="tab active" data-file="main.rock">
+				<span class="tab-name">main.rock</span>
+			</div>
+			<div class="tab-add" id="add-tab" title="Add module file">＋</div>
+		</div>
+		<div class="editor-area">
+			<textarea id="editor" spellcheck="false" autocorrect="off" autocapitalize="off">Shout "Hello World!"
+</textarea>
+		</div>
+	</div>
+
+	<div class="resize-handle" id="resize-handle"></div>
+
+	<div class="output-panel">
+		<div class="output-tabs">
+			<div class="output-tab active" data-panel="output">Output</div>
+			<div class="output-tab" data-panel="ast">AST</div>
+			<div class="output-tab" data-panel="shell">Shell</div>
+		</div>
+		<div class="output-content" id="output-content"></div>
+	</div>
+
+	<div class="status-bar">
+		<div class="status-dot loading" id="status-dot"></div>
+		<span id="status-text">Loading GlamRock engine...</span>
+		<span class="spacer" style="flex:1"></span>
+		<span id="file-count">1 file</span>
+	</div>
+</main>
+
+<script type="module">
+// === File System ===
+const files = new Map();
+files.set('main.rock', 'Shout "Hello World!"\n');
+
+let activeFile = 'main.rock';
+let activeOutputPanel = 'output';
+const outputBuffers = { output: '', ast: '', shell: '' };
+
+const editor = document.getElementById('editor');
+const tabBar = document.getElementById('tab-bar');
+const outputContent = document.getElementById('output-content');
+const statusDot = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
+const fileCount = document.getElementById('file-count');
+const btnRun = document.getElementById('btn-run');
+const btnParse = document.getElementById('btn-parse');
+const btnClear = document.getElementById('btn-clear');
+
+// === Tab Management ===
+function renderTabs() {
+	const tabs = tabBar.querySelectorAll('.tab');
+	tabs.forEach(t => t.remove());
+	const addBtn = document.getElementById('add-tab');
+
+	for (const [name] of files) {
+		const tab = document.createElement('div');
+		tab.className = 'tab' + (name === activeFile ? ' active' : '');
+		tab.dataset.file = name;
+
+		const nameSpan = document.createElement('span');
+		nameSpan.className = 'tab-name';
+		nameSpan.textContent = name;
+		tab.appendChild(nameSpan);
+
+		if (name !== 'main.rock') {
+			const close = document.createElement('span');
+			close.className = 'close-tab';
+			close.textContent = '×';
+			close.addEventListener('click', (e) => {
+				e.stopPropagation();
+				removeFile(name);
+			});
+			tab.appendChild(close);
+		}
+
+		tab.addEventListener('click', () => switchTab(name));
+		tabBar.insertBefore(tab, addBtn);
+	}
+	fileCount.textContent = files.size + (files.size === 1 ? ' file' : ' files');
+}
+
+function switchTab(name) {
+	files.set(activeFile, editor.value);
+	activeFile = name;
+	editor.value = files.get(name) || '';
+	renderTabs();
+	editor.focus();
+}
+
+function addFile() {
+	let name = prompt('Module filename (e.g. math.rock):');
+	if (!name) return;
+	if (!name.endsWith('.rock')) name += '.rock';
+	if (files.has(name)) { alert('File already exists!'); return; }
+	files.set(activeFile, editor.value);
+	files.set(name, `(${name} - write your module here)\n\nLight The Answer\nThe Answer is 42\n`);
+	activeFile = name;
+	editor.value = files.get(name);
+	renderTabs();
+	editor.focus();
+}
+
+function removeFile(name) {
+	if (!confirm(`Delete ${name}?`)) return;
+	files.delete(name);
+	if (activeFile === name) {
+		activeFile = 'main.rock';
+		editor.value = files.get(activeFile);
+	}
+	renderTabs();
+}
+
+document.getElementById('add-tab').addEventListener('click', addFile);
+editor.addEventListener('input', () => files.set(activeFile, editor.value));
+
+// === Output Panel ===
+function appendOutput(text, className) {
+	outputBuffers[activeOutputPanel] += text;
+	renderOutput();
+}
+
+function writeOutput(panel, text, className) {
+	if (className) {
+		outputBuffers[panel] += `<span class="${className}">${escapeHtml(text)}</span>`;
+	} else {
+		outputBuffers[panel] += escapeHtml(text);
+	}
+	if (panel === activeOutputPanel) renderOutput();
+}
+
+function renderOutput() {
+	outputContent.innerHTML = outputBuffers[activeOutputPanel];
+	outputContent.scrollTop = outputContent.scrollHeight;
+}
+
+function clearOutput() {
+	outputBuffers.output = '';
+	outputBuffers.ast = '';
+	outputBuffers.shell = '';
+	renderOutput();
+}
+
+function escapeHtml(s) {
+	return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.querySelectorAll('.output-tab').forEach(tab => {
+	tab.addEventListener('click', () => {
+		document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
+		tab.classList.add('active');
+		activeOutputPanel = tab.dataset.panel;
+		renderOutput();
+	});
+});
+
+btnClear.addEventListener('click', clearOutput);
+
+// === Resize Handle ===
+const resizeHandle = document.getElementById('resize-handle');
+let resizing = false;
+resizeHandle.addEventListener('mousedown', (e) => {
+	resizing = true;
+	document.addEventListener('mousemove', onResize);
+	document.addEventListener('mouseup', () => {
+		resizing = false;
+		document.removeEventListener('mousemove', onResize);
+	}, { once: true });
+});
+function onResize(e) {
+	if (!resizing) return;
+	const main = document.querySelector('main');
+	const rect = main.getBoundingClientRect();
+	const outputH = Math.max(80, rect.bottom - e.clientY - 32);
+	main.style.gridTemplateRows = `40px 1fr 8px ${outputH}px 32px`;
+}
+
+// === Built-in Shell Commands ===
+function executeCommand(cmd) {
+	const trimmed = cmd.trim();
+	writeOutput('shell', `$ ${trimmed}\n`, 'info');
+
+	if (trimmed.startsWith('echo ')) {
+		const result = trimmed.slice(5);
+		writeOutput('shell', result + '\n');
+		return result;
+	}
+	if (trimmed === 'ls' || trimmed === 'dir') {
+		const listing = Array.from(files.keys()).join('\n');
+		writeOutput('shell', listing + '\n');
+		return listing;
+	}
+	if (trimmed.startsWith('cat ')) {
+		const filename = trimmed.slice(4).trim();
+		const content = files.get(filename) || files.get(filename + '.rock');
+		if (content) {
+			writeOutput('shell', content + '\n');
+			return content;
+		}
+		writeOutput('shell', `cat: ${filename}: No such file\n`, 'error');
+		return '';
+	}
+	if (trimmed === 'pwd') {
+		writeOutput('shell', '/playground\n');
+		return '/playground';
+	}
+	if (trimmed === 'date') {
+		const d = new Date().toISOString();
+		writeOutput('shell', d + '\n');
+		return d;
+	}
+
+	writeOutput('shell', `sh: ${trimmed.split(' ')[0]}: command not found (available: echo, ls, cat, pwd, date)\n`, 'error');
+	return '';
+}
+
+// === WASM Worker ===
+const worker = new Worker('/js/playground-worker.js', { type: 'module' });
+
+worker.addEventListener('message', (e) => {
+	const { type, output, result, error, status, parseResult } = e.data;
+
+	switch (type) {
+		case 'ready':
+			statusDot.className = 'status-dot ready';
+			statusText.textContent = status;
+			btnRun.disabled = false;
+			btnParse.disabled = false;
+			break;
+		case 'output':
+			writeOutput('output', output);
+			break;
+		case 'result':
+			writeOutput('output', '\n--- done ---\n', 'info');
+			setRunning(false);
+			break;
+		case 'parse':
+			writeOutput('ast', result + '\n');
+			setRunning(false);
+			break;
+		case 'shell':
+			// Command execution request from WASM
+			const cmdResult = executeCommand(e.data.command);
+			worker.postMessage({ type: 'shell-result', id: e.data.id, result: cmdResult });
+			break;
+		case 'error':
+			writeOutput('output', error + '\n', 'error');
+			setRunning(false);
+			break;
+	}
+});
+
+let running = false;
+function setRunning(v) {
+	running = v;
+	btnRun.textContent = v ? '⏹ Stop' : '▶ Run';
+	btnRun.className = v ? 'btn' : 'btn btn-run';
+}
+
+function runProgram() {
+	if (running) { worker.terminate(); location.reload(); return; }
+	files.set(activeFile, editor.value);
+	clearOutput();
+	setRunning(true);
+
+	// Build module map (all files except main.rock)
+	const moduleMap = {};
+	for (const [name, content] of files) {
+		if (name !== 'main.rock') moduleMap[name] = content;
+	}
+
+	worker.postMessage({
+		command: 'run',
+		source: files.get('main.rock'),
+		modules: moduleMap
+	});
+}
+
+function parseProgram() {
+	files.set(activeFile, editor.value);
+	activeOutputPanel = 'ast';
+	document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
+	document.querySelector('[data-panel="ast"]').classList.add('active');
+	clearOutput();
+	setRunning(true);
+
+	worker.postMessage({
+		command: 'parse',
+		source: files.get('main.rock')
+	});
+}
+
+btnRun.addEventListener('click', runProgram);
+btnParse.addEventListener('click', parseProgram);
+
+// Keyboard shortcuts
+editor.addEventListener('keydown', (e) => {
+	if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+		e.preventDefault();
+		if (e.shiftKey) parseProgram();
+		else runProgram();
+	}
+	// Tab key inserts tab
+	if (e.key === 'Tab') {
+		e.preventDefault();
+		const start = editor.selectionStart;
+		editor.value = editor.value.substring(0, start) + '\t' + editor.value.substring(editor.selectionEnd);
+		editor.selectionStart = editor.selectionEnd = start + 1;
+		files.set(activeFile, editor.value);
+	}
+});
+
+renderTabs();
+</script>
