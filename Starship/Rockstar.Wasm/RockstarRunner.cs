@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices.JavaScript;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -11,6 +12,29 @@ public class WasmIO(Action<string> output, Queue<string> input) : IRockstarIO {
 	public string? Read() => input.TryDequeue(out var s) ? s : null;
 	public void Write(string s) => output(s);
 	public void WriteLine(string s) => output(s + Environment.NewLine);
+}
+
+public class WasmModuleLoader : ModuleLoaderBase {
+	private readonly Func<string, string?> resolveModule;
+
+	public WasmModuleLoader(Func<string, string?> resolveModule) {
+		this.resolveModule = resolveModule;
+	}
+
+	public override string ResolvePath(string importPath, string? currentFilePath) {
+		if (!importPath.EndsWith(".rock", StringComparison.OrdinalIgnoreCase)) {
+			importPath += ".rock";
+		}
+		return importPath;
+	}
+
+	protected override string LoadSource(string resolvedPath) {
+		var source = resolveModule(resolvedPath);
+		if (source == null) {
+			throw new FileNotFoundException($"Module not found: {resolvedPath}");
+		}
+		return source.ReplaceLineEndings();
+	}
 }
 
 public partial class RockstarRunner {
@@ -27,12 +51,24 @@ public partial class RockstarRunner {
 	[JSExport]
 	public static Task<string> Run(string source,
 		[JSMarshalAs<JSType.Function<JSType.String>>] Action<string> output, string? input = null, string? args = null) {
-		Console.WriteLine("Running Rockstar program");
+		return RunWithModules(source, output, null, input, args);
+	}
+
+	[JSExport]
+	public static Task<string> RunWithModules(string source,
+		[JSMarshalAs<JSType.Function<JSType.String>>] Action<string> output,
+		[JSMarshalAs<JSType.Function<JSType.String, JSType.String>>] Func<string, string?>? moduleResolver = null,
+		string? input = null, string? args = null) {
+		Console.WriteLine("Running GlamRock program");
 		var inputQueue = new Queue<string>((input ?? "").Split(Environment.NewLine));
 		var argList = Regex.Split((args ?? ""), "\\s+");
 		return Task.Run(() => {
 			IRockstarIO io = new WasmIO(output, inputQueue);
 			var env = new RockstarEnvironment(io, argList);
+			if (moduleResolver != null) {
+				env.ModuleLoader = new WasmModuleLoader(moduleResolver);
+				env.SourceFilePath = "main.rock";
+			}
 			try {
 				var program = parser.Parse(source);
 				var result = env.Execute(program);

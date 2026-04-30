@@ -18,12 +18,51 @@ public enum ModuleState {
 	Failed
 }
 
-public class ModuleLoader {
-	private readonly Dictionary<string, ModuleState> moduleStates = new();
-	private readonly Dictionary<string, ModuleExports> moduleCache = new();
-	private readonly Parser parser = new();
+public abstract class ModuleLoaderBase {
+	protected readonly Dictionary<string, ModuleState> moduleStates = new();
+	protected readonly Dictionary<string, ModuleExports> moduleCache = new();
+	protected readonly Parser parser = new();
 
-	public static string ResolvePath(string importPath, string? currentFilePath) {
+	public abstract string ResolvePath(string importPath, string? currentFilePath);
+
+	public ModuleExports Load(string resolvedPath, IRockstarIO io) {
+		if (moduleCache.TryGetValue(resolvedPath, out var cached)) {
+			return cached;
+		}
+
+		if (moduleStates.TryGetValue(resolvedPath, out var state) && state == ModuleState.Loading) {
+			throw new InvalidOperationException(
+				$"Circular import detected: {resolvedPath} is already being loaded");
+		}
+
+		moduleStates[resolvedPath] = ModuleState.Loading;
+
+		try {
+			var source = LoadSource(resolvedPath);
+			var program = parser.Parse(source);
+
+			var moduleEnv = new RockstarEnvironment(io) {
+				SourceFilePath = resolvedPath,
+				ModuleLoader = this
+			};
+
+			moduleEnv.Execute(program);
+
+			var exports = moduleEnv.CollectExports();
+			moduleCache[resolvedPath] = exports;
+			moduleStates[resolvedPath] = ModuleState.Loaded;
+			return exports;
+		} catch {
+			moduleStates[resolvedPath] = ModuleState.Failed;
+			throw;
+		}
+	}
+
+	protected abstract string LoadSource(string resolvedPath);
+}
+
+public class ModuleLoader : ModuleLoaderBase {
+	public override string ResolvePath(string importPath, string? currentFilePath) {
 		if (System.IO.Path.IsPathRooted(importPath)) {
 			return NormalizePath(importPath);
 		}
@@ -43,42 +82,10 @@ public class ModuleLoader {
 		return System.IO.Path.GetFullPath(path);
 	}
 
-	public ModuleExports Load(string resolvedPath, IRockstarIO io) {
-		if (moduleCache.TryGetValue(resolvedPath, out var cached)) {
-			return cached;
-		}
-
-		if (moduleStates.TryGetValue(resolvedPath, out var state) && state == ModuleState.Loading) {
-			throw new InvalidOperationException(
-				$"Circular import detected: {resolvedPath} is already being loaded");
-		}
-
+	protected override string LoadSource(string resolvedPath) {
 		if (!File.Exists(resolvedPath)) {
-			throw new FileNotFoundException(
-				$"Module not found: {resolvedPath}");
+			throw new FileNotFoundException($"Module not found: {resolvedPath}");
 		}
-
-		moduleStates[resolvedPath] = ModuleState.Loading;
-
-		try {
-			var source = File.ReadAllText(resolvedPath).ReplaceLineEndings();
-			var program = parser.Parse(source);
-
-			// Execute in isolated root environment with its own scope
-			var moduleEnv = new RockstarEnvironment(io) {
-				SourceFilePath = resolvedPath,
-				ModuleLoader = this
-			};
-
-			moduleEnv.Execute(program);
-
-			var exports = moduleEnv.CollectExports();
-			moduleCache[resolvedPath] = exports;
-			moduleStates[resolvedPath] = ModuleState.Loaded;
-			return exports;
-		} catch {
-			moduleStates[resolvedPath] = ModuleState.Failed;
-			throw;
-		}
+		return File.ReadAllText(resolvedPath).ReplaceLineEndings();
 	}
 }

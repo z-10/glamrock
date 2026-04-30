@@ -37,7 +37,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 	protected IRockstarIO IO = io;
 
 	public string? SourceFilePath { get; set; }
-	public ModuleLoader? ModuleLoader { get; set; }
+	public ModuleLoaderBase? ModuleLoader { get; set; }
 
 	private readonly Dictionary<string, ModuleExports> loadedModuleExports = new(StringComparer.OrdinalIgnoreCase);
 
@@ -206,7 +206,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 		var loader = ModuleLoader
 			?? throw new("Module imports require a module loader (are you running from a file?)");
 
-		var resolvedPath = Engine.ModuleLoader.ResolvePath(channeling.ModulePath, SourceFilePath);
+		var resolvedPath = ModuleLoader.ResolvePath(channeling.ModulePath, SourceFilePath);
 		var exports = loader.Load(resolvedPath, IO);
 
 		// Store module exports for runtime 'from' lookups
@@ -247,7 +247,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 		var loader = ModuleLoader
 			?? throw new("Module imports require a module loader (are you running from a file?)");
 
-		var resolvedPath = Engine.ModuleLoader.ResolvePath(scoped.ModulePath, SourceFilePath);
+		var resolvedPath = ModuleLoader.ResolvePath(scoped.ModulePath, SourceFilePath);
 		var exports = loader.Load(resolvedPath, IO);
 
 		// Save previous state for restoration
