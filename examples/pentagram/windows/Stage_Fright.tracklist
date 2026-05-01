@@ -1,33 +1,33 @@
 ALBUM user32.dll
 
-TRACK Windowforge FEATURING CreateWindowExW
+TRACK Velvet Door FEATURING CreateWindowExW
   TAKES mysterious, string, string, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious
   GIVES mysterious
 
-TRACK StageRise FEATURING ShowWindow
+TRACK Raise The Curtain FEATURING ShowWindow
   TAKES mysterious, number
   GIVES boolean
 
-TRACK StageRefresh FEATURING UpdateWindow
+TRACK Wake The Stage FEATURING UpdateWindow
   TAKES mysterious
   GIVES boolean
 
-TRACK ScreenSeize FEATURING GetDC
+TRACK Borrow The Spotlight FEATURING GetDC
   TAKES mysterious
   GIVES mysterious
 
-TRACK ScreenFree FEATURING ReleaseDC
+TRACK Release The Spotlight FEATURING ReleaseDC
   TAKES mysterious, mysterious
   GIVES number
 
-TRACK CurtainFall FEATURING DestroyWindow
+TRACK Drop The Curtain FEATURING DestroyWindow
   TAKES mysterious
   GIVES boolean
 
-TRACK MessagePump FEATURING PeekMessageW
+TRACK Catch The Murmur FEATURING PeekMessageW
   TAKES mysterious, mysterious, number, number, number
   GIVES boolean
 
-TRACK MessageDispatch FEATURING DispatchMessageW
+TRACK Carry The Murmur FEATURING DispatchMessageW
   TAKES mysterious
   GIVES mysterious
