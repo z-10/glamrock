@@ -23,3 +23,11 @@ TRACK ScreenFree FEATURING ReleaseDC
 TRACK CurtainFall FEATURING DestroyWindow
   TAKES mysterious
   GIVES boolean
+
+TRACK MessagePump FEATURING PeekMessageW
+  TAKES mysterious, mysterious, number, number, number
+  GIVES boolean
+
+TRACK MessageDispatch FEATURING DispatchMessageW
+  TAKES mysterious
+  GIVES mysterious

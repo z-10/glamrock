@@ -7,3 +7,11 @@ TRACK Thunderpause FEATURING Sleep
 TRACK Wordcount FEATURING lstrlenW
   TAKES string
   GIVES number
+
+TRACK Memorize FEATURING GlobalAlloc
+  TAKES number, number
+  GIVES mysterious
+
+TRACK Forget FEATURING GlobalFree
+  TAKES mysterious
+  GIVES mysterious

@@ -43,3 +43,19 @@ TRACK Shadowveil FEATURING SetBkMode
 TRACK Lyricburn FEATURING TextOutW
   TAKES mysterious, number, number, string, number
   GIVES boolean
+
+TRACK ShadowStage FEATURING CreateCompatibleDC
+  TAKES mysterious
+  GIVES mysterious
+
+TRACK ShadowCanvas FEATURING CreateCompatibleBitmap
+  TAKES mysterious, number, number
+  GIVES mysterious
+
+TRACK ScreenBlit FEATURING BitBlt
+  TAKES mysterious, number, number, number, number, mysterious, number, number, number
+  GIVES boolean
+
+TRACK ShadowBreak FEATURING DeleteDC
+  TAKES mysterious
+  GIVES boolean
