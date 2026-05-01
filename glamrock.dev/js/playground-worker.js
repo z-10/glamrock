@@ -1,4 +1,16 @@
 import { dotnet } from '../wasm/wwwroot/_framework/dotnet.js'
+import { initWorkerSide, callMainThread } from './sync-bridge.js'
+
+let bridgeReady = false;
+
+// Wait for the shared buffer from main thread
+self.addEventListener('message', function initBridge(e) {
+	if (e.data.type === 'init-bridge') {
+		initWorkerSide(e.data.buffer);
+		bridgeReady = true;
+		self.removeEventListener('message', initBridge);
+	}
+});
 
 const { getAssemblyExports, getConfig } = await dotnet.withDiagnosticTracing(false).create();
 const config = getConfig();
@@ -7,18 +19,18 @@ const exports = await getAssemblyExports(config.mainAssemblyName);
 var status = await exports.Rockstar.Wasm.RockstarRunner.Status();
 self.postMessage({ type: 'ready', status: status });
 
-// Module map populated per-run from the main thread
 let currentModules = {};
 
-// Pending shell commands (sync bridge via SharedArrayBuffer or polling)
-let pendingShellResults = new Map();
-let shellId = 0;
+// Built-in tracklists loaded from main thread
+let builtinTracklists = {};
 
 function resolveModule(path) {
-	// Try exact match, then with .rock extension
+	// Try .tracklist first (for Know/Invoke)
+	if (builtinTracklists[path]) return builtinTracklists[path];
+
+	// Then .rock modules
 	if (currentModules[path]) return currentModules[path];
 	if (currentModules[path + '.rock']) return currentModules[path + '.rock'];
-	// Try lowercase
 	const lower = path.toLowerCase();
 	for (const [key, value] of Object.entries(currentModules)) {
 		if (key.toLowerCase() === lower || key.toLowerCase() === lower + '.rock') {
@@ -50,6 +62,11 @@ function executeCommand(cmd) {
 	return `sh: ${trimmed.split(' ')[0]}: command not found`;
 }
 
+function trackHandler(trackName, argsJson) {
+	if (!bridgeReady) return JSON.stringify({ result: null });
+	return callMainThread(trackName, argsJson);
+}
+
 function report(output) {
 	self.postMessage({ type: 'output', output: output });
 }
@@ -61,7 +78,8 @@ async function runProgram(source, modules) {
 			source,
 			report,
 			resolveModule,
-			executeCommand
+			executeCommand,
+			trackHandler
 		);
 		self.postMessage({ type: 'result', result: result });
 	} catch (error) {
@@ -85,5 +103,8 @@ self.addEventListener('message', async function(message) {
 			return await runProgram(data.source, data.modules);
 		case 'parse':
 			return await parseProgram(data.source);
+		case 'load-tracklists':
+			builtinTracklists = data.tracklists || {};
+			return;
 	}
 });

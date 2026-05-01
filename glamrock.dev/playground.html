@@ -11,6 +11,7 @@ nav_exclude: true
 	main {
 		position: fixed; top: 0; left: 0; bottom: 0; right: 0;
 		display: grid;
+		grid-template-columns: 1fr 1fr;
 		grid-template-rows: 40px 1fr 8px 200px 32px;
 		font-family: 'Segoe UI', system-ui, sans-serif;
 		background: #1a1a2e;
@@ -19,6 +20,7 @@ nav_exclude: true
 
 	/* Top bar */
 	.top-bar {
+		grid-column: 1 / -1;
 		display: flex; align-items: center; gap: 8px;
 		background: #16213e; padding: 0 12px;
 		border-bottom: 1px solid #333;
@@ -113,6 +115,25 @@ nav_exclude: true
 	.status-dot.loading { background: #f39c12; }
 	.status-dot.ready { background: #2ecc71; }
 	.status-dot.error { background: #e74c3c; }
+
+	/* Canvas panel */
+	.canvas-panel {
+		background: #0d0d1a; border-left: 1px solid #333;
+		display: flex; flex-direction: column; overflow: hidden;
+	}
+	.canvas-header {
+		padding: 4px 12px; font-size: 12px; color: #888;
+		background: #111; border-bottom: 1px solid #333;
+	}
+	.canvas-body {
+		flex: 1; display: flex; align-items: center; justify-content: center;
+		padding: 8px; overflow: auto;
+	}
+
+	/* Resize handle + output + status span full width */
+	.resize-handle { grid-column: 1 / -1; }
+	.output-panel { grid-column: 1 / -1; }
+	.status-bar { grid-column: 1 / -1; }
 </style>
 
 <main>
@@ -137,6 +158,13 @@ nav_exclude: true
 		</div>
 	</div>
 
+	<div class="canvas-panel">
+		<div class="canvas-header">🎨 Canvas</div>
+		<div class="canvas-body" id="canvas-container">
+			<span style="color:#555; font-size:13px;">Know Canvas to start drawing</span>
+		</div>
+	</div>
+
 	<div class="resize-handle" id="resize-handle"></div>
 
 	<div class="output-panel">
@@ -157,9 +185,29 @@ nav_exclude: true
 </main>
 
 <script type="module">
+import { createBridge, initMainSide } from '/js/sync-bridge.js';
+import { handleTrackCall } from '/js/glamrock-tracks.js';
+
+// === Sync Bridge Setup ===
+const sharedBuffer = createBridge();
+initMainSide(sharedBuffer, handleTrackCall);
+
 // === File System ===
 const files = new Map();
-files.set('main.rock', 'Shout "Hello World!"\n');
+files.set('main.rock', `Know Canvas
+Create Canvas taking 400, 300, my screen
+
+Set Color taking "gold"
+Draw Circle taking 200, 150, 80
+
+Set Color taking "#e91e90"
+Write Text taking "GlamRock!", 140, 160
+
+Set Stroke taking "white"
+Draw Outline taking 50, 50, 300, 200
+
+Shout "Drew a glamorous circle!"
+`);
 
 let activeFile = 'main.rock';
 let activeOutputPanel = 'output';
@@ -344,6 +392,27 @@ function executeCommand(cmd) {
 
 // === WASM Worker ===
 const worker = new Worker('/js/playground-worker.js', { type: 'module' });
+
+// Send shared buffer for sync bridge
+worker.postMessage({ type: 'init-bridge', buffer: sharedBuffer });
+
+// Load and send built-in tracklists
+async function loadTracklists() {
+	try {
+		const [canvasResp, audioResp] = await Promise.all([
+			fetch('/tracklists/canvas.tracklist'),
+			fetch('/tracklists/audio.tracklist'),
+		]);
+		const tracklists = {
+			'canvas.tracklist': await canvasResp.text(),
+			'audio.tracklist': await audioResp.text(),
+		};
+		worker.postMessage({ command: 'load-tracklists', tracklists });
+	} catch (e) {
+		console.warn('Could not load tracklists:', e);
+	}
+}
+loadTracklists();
 
 worker.addEventListener('message', (e) => {
 	const { type, output, result, error, status, parseResult } = e.data;

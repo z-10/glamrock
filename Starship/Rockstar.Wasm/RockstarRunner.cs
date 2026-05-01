@@ -68,7 +68,7 @@ public partial class RockstarRunner {
 	[JSExport]
 	public static Task<string> Run(string source,
 		[JSMarshalAs<JSType.Function<JSType.String>>] Action<string> output, string? input = null, string? args = null) {
-		return RunWithModules(source, output, null, null, input, args);
+		return RunWithModules(source, output, null, null, null, input, args);
 	}
 
 	[JSExport]
@@ -76,6 +76,7 @@ public partial class RockstarRunner {
 		[JSMarshalAs<JSType.Function<JSType.String>>] Action<string> output,
 		[JSMarshalAs<JSType.Function<JSType.String, JSType.String>>] Func<string, string?>? moduleResolver = null,
 		[JSMarshalAs<JSType.Function<JSType.String, JSType.String>>] Func<string, string>? commandExecutor = null,
+		[JSMarshalAs<JSType.Function<JSType.String, JSType.String, JSType.String>>] Func<string, string, string>? trackHandler = null,
 		string? input = null, string? args = null) {
 		Console.WriteLine("Running GlamRock program");
 		var inputQueue = new Queue<string>((input ?? "").Split(Environment.NewLine));
@@ -89,6 +90,9 @@ public partial class RockstarRunner {
 			}
 			if (commandExecutor != null) {
 				env.CommandExecutor = new WasmCommandExecutor(commandExecutor);
+			}
+			if (trackHandler != null) {
+				env.TrackCallHandler = trackHandler;
 			}
 			try {
 				var program = parser.Parse(source);

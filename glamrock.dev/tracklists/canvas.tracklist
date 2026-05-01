@@ -1,0 +1,50 @@
+ALBUM glamrock-canvas.js
+
+TRACK Create Canvas FEATURING createCanvas
+  TAKES number, number, sigil
+  GIVES nothing
+
+TRACK Set Color FEATURING setFillStyle
+  TAKES string
+  GIVES nothing
+
+TRACK Set Stroke FEATURING setStrokeStyle
+  TAKES string
+  GIVES nothing
+
+TRACK Set Line Width FEATURING setLineWidth
+  TAKES number
+  GIVES nothing
+
+TRACK Clear Canvas FEATURING clearRect
+  GIVES nothing
+
+TRACK Draw Rectangle FEATURING fillRect
+  TAKES number, number, number, number
+  GIVES nothing
+
+TRACK Draw Outline FEATURING strokeRect
+  TAKES number, number, number, number
+  GIVES nothing
+
+TRACK Draw Circle FEATURING fillCircle
+  TAKES number, number, number
+  GIVES nothing
+
+TRACK Draw Line FEATURING drawLine
+  TAKES number, number, number, number
+  GIVES nothing
+
+TRACK Write Text FEATURING fillText
+  TAKES string, number, number
+  GIVES nothing
+
+TRACK Set Font FEATURING setFont
+  TAKES string
+  GIVES nothing
+
+TRACK Canvas Width FEATURING getWidth
+  GIVES number
+
+TRACK Canvas Height FEATURING getHeight
+  GIVES number
