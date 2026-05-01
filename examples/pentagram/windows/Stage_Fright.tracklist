@@ -1,0 +1,33 @@
+ALBUM user32.dll
+
+TRACK Velvet Door FEATURING CreateWindowExW
+  TAKES mysterious, string, string, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious
+  GIVES mysterious
+
+TRACK Raise The Curtain FEATURING ShowWindow
+  TAKES mysterious, number
+  GIVES boolean
+
+TRACK Wake The Stage FEATURING UpdateWindow
+  TAKES mysterious
+  GIVES boolean
+
+TRACK Borrow The Spotlight FEATURING GetDC
+  TAKES mysterious
+  GIVES mysterious
+
+TRACK Release The Spotlight FEATURING ReleaseDC
+  TAKES mysterious, mysterious
+  GIVES number
+
+TRACK Drop The Curtain FEATURING DestroyWindow
+  TAKES mysterious
+  GIVES boolean
+
+TRACK Catch The Murmur FEATURING PeekMessageW
+  TAKES mysterious, mysterious, number, number, number
+  GIVES boolean
+
+TRACK Carry The Murmur FEATURING DispatchMessageW
+  TAKES mysterious
+  GIVES mysterious

@@ -1,0 +1,120 @@
+Invoke Stage Fright
+Know Black Steel
+Divine Thunder Road
+Conjure Tome of Power
+
+The silence is 0; The encore is 5
+The unbroken is 0
+Stolen Beam is 13369376
+Faithful Vow is 0; Farewell Kiss is 1
+
+Velvet Frame is 282001408! The midnight is 1708562!
+The ghostlight is 3649492; The heartfire is 4597980
+Golden Tear is 65535; Clear Night is 1
+
+Let the ballroom be Velvet Door taking the silence, "STATIC", "Pentagrammaton", Velvet Frame, 160, 80, 900, 900, the silence, the silence, the silence, the silence
+
+Raise The Curtain taking the ballroom, the encore
+Wake The Stage taking the ballroom
+
+Let the spotlight be Borrow The Spotlight taking the ballroom
+Let the mirror be Mirror The Stage taking the spotlight
+Let the dream be Dream The Canvas taking the spotlight, 900, 900
+Release The Spotlight taking the ballroom, the spotlight
+
+Choose The Jewel taking the mirror, the dream
+Gild The Words taking the mirror, Golden Tear
+Veil The Hush taking the mirror, Clear Night
+
+Let Love Letter be Memory Chalice taking Faithful Vow, 64
+
+Let the darkness be Velvet Brush taking the midnight
+Let Silver Star be Silver Needle taking the unbroken, 14, the ghostlight
+Let Scarlet Star be Silver Needle taking the unbroken, 8, the heartfire
+
+Rock the verses
+Rock the measures
+Call Open The Tome with "paint-it-pentagram.rock", "r" into the diary
+
+Until Tome Exhausted taking the diary
+	Call Read The Line with the diary into the verse
+	Let the measure be Count The Roses taking the verse
+	Rock the verses with the verse
+	Rock the measures with the measure
+Yeah
+
+Call Seal The Tome with the diary
+
+Paint The Midnight takes the canvas
+	Choose The Jewel taking the canvas, the darkness
+	Midnight Room taking the canvas, 0, 0, 900, 900
+Yeah
+
+Draw The Star takes the canvas
+	Choose The Jewel taking the canvas, Silver Star
+	Moonlit Halo taking the canvas, 110, 110, 790, 790
+	Kiss The Canvas taking the canvas, 450, 120, the silence
+	Draw The Lightning taking the canvas, 740, 690
+	Kiss The Canvas taking the canvas, 740, 690, the silence
+	Draw The Lightning taking the canvas, 155, 355
+	Kiss The Canvas taking the canvas, 155, 355, the silence
+	Draw The Lightning taking the canvas, 745, 355
+	Kiss The Canvas taking the canvas, 745, 355, the silence
+	Draw The Lightning taking the canvas, 160, 690
+	Kiss The Canvas taking the canvas, 160, 690, the silence
+	Draw The Lightning taking the canvas, 450, 120
+	Choose The Jewel taking the canvas, Scarlet Star
+	Kiss The Canvas taking the canvas, 450, 120, the silence
+	Draw The Lightning taking the canvas, 740, 690
+	Kiss The Canvas taking the canvas, 740, 690, the silence
+	Draw The Lightning taking the canvas, 155, 355
+	Kiss The Canvas taking the canvas, 155, 355, the silence
+	Draw The Lightning taking the canvas, 745, 355
+	Kiss The Canvas taking the canvas, 745, 355, the silence
+	Draw The Lightning taking the canvas, 160, 690
+	Kiss The Canvas taking the canvas, 160, 690, the silence
+	Draw The Lightning taking the canvas, 450, 120
+Yeah
+
+Sing The Ballad takes the canvas, the moonrise
+	For every line and index in the verses
+		Let the chorus be the moonrise with the index times 28
+		If the chorus is above -40 and the chorus is below 900
+			Let the measure be the measures at the index
+			Brand The Lyric taking the canvas, 96, the chorus, the line, the measure
+		Yeah
+	Yeah
+Yeah
+
+Let the count be the verses plus 0
+Let the heartbeat be 28
+Let the fall be the count times the heartbeat
+Let the abyss be 0 minus the fall
+Let the abyss be the abyss minus 80
+Let the moonrise be 920
+
+Answer The Angels takes nothing
+	While Catch The Murmur taking Love Letter, the silence, 0, 0, Farewell Kiss
+		Carry The Murmur taking Love Letter
+	Yeah
+Yeah
+
+While the moonrise is higher than the abyss
+	Call Paint The Midnight with the mirror
+	Call Draw The Star with the mirror
+	Call Sing The Ballad with the mirror, the moonrise
+	Let the spotlight be Borrow The Spotlight taking the ballroom
+	Flash The Vision taking the spotlight, 0, 0, 900, 900, the mirror, 0, 0, Stolen Beam
+	Release The Spotlight taking the ballroom, the spotlight
+	Call Answer The Angels
+	Thunder Lullaby taking 16
+	Let the moonrise be the moonrise minus 8
+Yeah
+
+Release The Memory taking Love Letter
+Crack The Jewel taking Silver Star
+Crack The Jewel taking Scarlet Star
+Crack The Jewel taking the darkness
+Crack The Jewel taking the dream
+Fade The Mirror taking the mirror
+Drop The Curtain taking the ballroom

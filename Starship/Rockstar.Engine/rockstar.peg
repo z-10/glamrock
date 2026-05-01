@@ -1,7 +1,6 @@
 @namespace Rockstar.Engine
 @classname PegParser
 @using System.Globalization
-@using System.Text.RegularExpressions
 @using Rockstar.Engine.Statements
 @using Rockstar.Engine.Expressions
 @using Rockstar.Engine.Values
@@ -35,14 +34,13 @@ block <Block>
 
 statement -memoize
 	= listen_stmt
+	/ function_call
 	/ output_stmt
 	/ shining_stmt
-	/ divine_stmt
 	/ scoped_channel_stmt
 	/ channeling_stmt
 	/ invoke_stmt
 	/ function
-	/ function_call
 	/ call_stmt
 	/ return_stmt
 	/ break_stmt
@@ -74,12 +72,6 @@ enlistment <Statement>
 shining_stmt <Statement>
 	= light _ v:variable_list
 		{ new Light(v.ToList()) }
-
-divine_stmt <Statement>
-	= divine _ e:expression_or_error _ into _ v:assignable_or_error
-		{ new Divine(e, v) }
-	/ divine _ e:expression_or_error
-		{ new Divine(e) }
 
 channeling_stmt <Statement>
 	= channel _ m:variable "'s" _ v:variable_list
@@ -318,7 +310,10 @@ variable <Variable>
 
 args = arguments / 'the' _ ( world / outside )
 
-proper_variable	= proper_noun (_ proper_noun)+
+proper_variable	= proper_noun (_ (proper_connector _)? proper_noun)+
+
+proper_connector = of / proper_the
+proper_the = 'the' !letter
 
 proper_noun	= uppercase_letter '.'
 			/ !keyword &uppercase_letter identifier
@@ -554,7 +549,6 @@ keyword
 	/ as
 	/ as_great
 	/ channel
-	/ divine
 	/ invoke
 	/ scoped_channel
 	/ from
@@ -645,9 +639,8 @@ end = 'end' !letter / 'yeah' !letter / 'baby' !letter / 'oh' !letter
 every = 'every' !letter
 exit = 'exit' !letter
 exactly = 'exactly' !letter / 'totally' !letter / 'really' !letter
-channel = 'channel' !letter / 'bring' !letter
-divine = 'divine' !letter / 'conjure' !letter
-invoke = 'invoke' !letter / 'know' !letter
+channel = 'channel' !letter / 'bring' !letter / 'conjure' !letter
+invoke = 'invoke' !letter / 'know' !letter / 'divine' !letter
 scoped_channel = 'channeling' !letter / 'bringing' !letter
 false = "false" !letter / "lies" !letter / "no" !letter / "wrong"!letter
 for = 'for' !letter

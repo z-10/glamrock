@@ -21,19 +21,11 @@ public class WasmModuleLoader : ModuleLoaderBase {
 		this.resolveModule = resolveModule;
 	}
 
-	public override string ResolvePath(string importPath, string? currentFilePath) {
-		if (!importPath.EndsWith(".rock", StringComparison.OrdinalIgnoreCase)) {
-			importPath += ".rock";
-		}
-		return importPath;
-	}
+	public override string ResolvePath(string importPath, string? currentFilePath) => importPath;
 
-	protected override string LoadSource(string resolvedPath) {
+	public override string? TryReadSource(string resolvedPath) {
 		var source = resolveModule(resolvedPath);
-		if (source == null) {
-			throw new FileNotFoundException($"Module not found: {resolvedPath}");
-		}
-		return source.ReplaceLineEndings();
+		return source?.ReplaceLineEndings();
 	}
 }
 

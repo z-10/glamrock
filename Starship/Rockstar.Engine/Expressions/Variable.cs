@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Rockstar.Engine.Expressions;
 
@@ -7,7 +6,7 @@ public abstract class Variable(string name) : Expression {
 
 	public string Name => name;
 
-	protected string NormalizedName { get; init; } = String.Join("_", whitespace.Split(name));
+	protected string NormalizedName { get; init; } = NormalizeName(name);
 
 	public override string ToString()
 		=> $"{GetType().Name.ToLower()}: {Key}"
@@ -28,7 +27,26 @@ public abstract class Variable(string name) : Expression {
 		return sb;
 	}
 
-	private static readonly Regex whitespace = new("\\s+", RegexOptions.Compiled);
+	private static string NormalizeName(string value) {
+		var sb = new StringBuilder(value.Length);
+		var pendingSeparator = false;
+
+		foreach (var ch in value) {
+			if (char.IsWhiteSpace(ch)) {
+				pendingSeparator = sb.Length > 0;
+				continue;
+			}
+
+			if (pendingSeparator) {
+				sb.Append('_');
+				pendingSeparator = false;
+			}
+
+			sb.Append(ch);
+		}
+
+		return sb.ToString();
+	}
 
 	public abstract string Key { get; }
 

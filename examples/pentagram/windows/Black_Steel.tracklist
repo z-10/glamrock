@@ -1,0 +1,61 @@
+ALBUM gdi32.dll
+
+TRACK Silver Needle FEATURING CreatePen
+  TAKES number, number, number
+  GIVES mysterious
+
+TRACK Velvet Brush FEATURING CreateSolidBrush
+  TAKES number
+  GIVES mysterious
+
+TRACK Choose The Jewel FEATURING SelectObject
+  TAKES mysterious, mysterious
+  GIVES mysterious
+
+TRACK Crack The Jewel FEATURING DeleteObject
+  TAKES mysterious
+  GIVES boolean
+
+TRACK Kiss The Canvas FEATURING MoveToEx
+  TAKES mysterious, number, number, mysterious
+  GIVES boolean
+
+TRACK Draw The Lightning FEATURING LineTo
+  TAKES mysterious, number, number
+  GIVES boolean
+
+TRACK Moonlit Halo FEATURING Ellipse
+  TAKES mysterious, number, number, number, number
+  GIVES boolean
+
+TRACK Midnight Room FEATURING Rectangle
+  TAKES mysterious, number, number, number, number
+  GIVES boolean
+
+TRACK Gild The Words FEATURING SetTextColor
+  TAKES mysterious, number
+  GIVES number
+
+TRACK Veil The Hush FEATURING SetBkMode
+  TAKES mysterious, number
+  GIVES number
+
+TRACK Brand The Lyric FEATURING TextOutW
+  TAKES mysterious, number, number, string, number
+  GIVES boolean
+
+TRACK Mirror The Stage FEATURING CreateCompatibleDC
+  TAKES mysterious
+  GIVES mysterious
+
+TRACK Dream The Canvas FEATURING CreateCompatibleBitmap
+  TAKES mysterious, number, number
+  GIVES mysterious
+
+TRACK Flash The Vision FEATURING BitBlt
+  TAKES mysterious, number, number, number, number, mysterious, number, number, number
+  GIVES boolean
+
+TRACK Fade The Mirror FEATURING DeleteDC
+  TAKES mysterious
+  GIVES boolean

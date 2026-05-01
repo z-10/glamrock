@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using Rockstar.Engine;
 namespace Rockstar;
 
@@ -51,7 +52,7 @@ public static class Program {
 			SourceFilePath = fullPath,
 			ModuleLoader = loader
 		};
-		var source = File.ReadAllText(path).ReplaceLineEndings();
+		var source = File.ReadAllText(path, Encoding.UTF8);
 		if (showTiming) {
 			sw = new();
 			sw.Start();

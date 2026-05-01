@@ -1,0 +1,17 @@
+ALBUM kernel32.dll
+
+TRACK Thunder Lullaby FEATURING Sleep
+  TAKES number
+  GIVES nothing
+
+TRACK Count The Roses FEATURING lstrlenW
+  TAKES string
+  GIVES number
+
+TRACK Memory Chalice FEATURING GlobalAlloc
+  TAKES number, number
+  GIVES mysterious
+
+TRACK Release The Memory FEATURING GlobalFree
+  TAKES mysterious
+  GIVES mysterious

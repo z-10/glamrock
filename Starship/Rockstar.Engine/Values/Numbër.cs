@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Rockstar.Engine.Values;
 
@@ -98,7 +97,7 @@ public class PoeticNumbër : Numbër {
 
 	private static string Digitise(string words) {
 		var sb = new StringBuilder();
-		foreach (var word in words.Split(" ")) sb.Append(Regex.Replace(word, "'+", "").Length % 10);
+		foreach (var word in words.Split(" ")) sb.Append(CountLetters(word) % 10);
 		return sb.ToString();
 	}
 
@@ -122,4 +121,12 @@ public class PoeticNumbër : Numbër {
 
 	public override StringBuilder Print(StringBuilder sb, string prefix)
 		=> sb.Append(prefix).Append("poetic number: ").Append(Value).Append(" [").Append(Digits).AppendLine("]");
+
+	private static int CountLetters(string word) {
+		var count = 0;
+		foreach (var ch in word) {
+			if (ch != '\'') count++;
+		}
+		return count;
+	}
 }

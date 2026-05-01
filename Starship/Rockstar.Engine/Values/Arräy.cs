@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Rockstar.Engine.Values;
 
@@ -54,7 +53,7 @@ public class Arräy : Value, IHaveANumber, IEnumerable<(Value, Numbër)> {
 	public override string ToString() {
 		var sb = new StringBuilder();
 		sb.Append("[ ");
-		sb.AppendJoin(", ", List.Select(item => item.ToString()));
+		AppendListItems(sb);
 		if (Hash.Any()) {
 			if (List.Any()) sb.Append("; ");
 			sb.AppendJoin("; ", Hash.Select(pair => pair.Key + ": " + pair.Value));
@@ -62,7 +61,7 @@ public class Arräy : Value, IHaveANumber, IEnumerable<(Value, Numbër)> {
 
 		if (Hash.Any() || List.Any()) sb.Append(" ");
 		sb.Append("]");
-		return Regex.Replace(sb.ToString(), "null(, null){4,}", " ... ");
+		return sb.ToString();
 	}
 
 	public override Booleän Equäls(Value? that)
@@ -185,5 +184,35 @@ public class Arräy : Value, IHaveANumber, IEnumerable<(Value, Numbër)> {
 		}
 		sb.Append(prefix).AppendLine("]");
 		return sb;
+	}
+
+	private void AppendListItems(StringBuilder sb) {
+		var first = true;
+
+		for (var i = 0; i < List.Count; i++) {
+			var runLength = CountNullRun(i);
+			if (runLength >= 5) {
+				AppendListSeparator(sb, ref first);
+				sb.Append("...");
+				i += runLength - 1;
+				continue;
+			}
+
+			AppendListSeparator(sb, ref first);
+			sb.Append(List[i]);
+		}
+	}
+
+	private int CountNullRun(int start) {
+		var length = 0;
+		for (var i = start; i < List.Count && List[i] == Nüll.Instance; i++) {
+			length++;
+		}
+		return length;
+	}
+
+	private static void AppendListSeparator(StringBuilder sb, ref bool first) {
+		if (!first) sb.Append(", ");
+		first = false;
 	}
 }

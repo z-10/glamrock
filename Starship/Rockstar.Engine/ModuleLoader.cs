@@ -23,9 +23,20 @@ public abstract class ModuleLoaderBase {
 	protected readonly Dictionary<string, ModuleExports> moduleCache = new();
 	protected readonly Parser parser = new();
 
+	/// <summary>
+	/// Resolve an import path to an absolute (or host-canonical) path.
+	/// Does NOT manipulate the file extension — callers pass the full filename
+	/// they expect (e.g. "math_module.rock" or "gdi.tracklist").
+	/// </summary>
 	public abstract string ResolvePath(string importPath, string? currentFilePath);
 
-	public ModuleExports Load(string resolvedPath, IRockstarIO io) {
+	/// <summary>
+	/// Read source for an already-resolved path. Returns null if the source
+	/// does not exist (callers use this to probe optional sidecar files).
+	/// </summary>
+	public abstract string? TryReadSource(string resolvedPath);
+
+	public ModuleExports? TryLoadModule(string resolvedPath, IRockstarIO io) {
 		if (moduleCache.TryGetValue(resolvedPath, out var cached)) {
 			return cached;
 		}
@@ -35,10 +46,12 @@ public abstract class ModuleLoaderBase {
 				$"Circular import detected: {resolvedPath} is already being loaded");
 		}
 
+		var source = TryReadSource(resolvedPath);
+		if (source == null) return null;
+
 		moduleStates[resolvedPath] = ModuleState.Loading;
 
 		try {
-			var source = LoadSource(resolvedPath);
 			var program = parser.Parse(source);
 
 			var moduleEnv = new RockstarEnvironment(io) {
@@ -57,35 +70,23 @@ public abstract class ModuleLoaderBase {
 			throw;
 		}
 	}
-
-	protected abstract string LoadSource(string resolvedPath);
 }
 
 public class ModuleLoader : ModuleLoaderBase {
 	public override string ResolvePath(string importPath, string? currentFilePath) {
 		if (System.IO.Path.IsPathRooted(importPath)) {
-			return NormalizePath(importPath);
+			return System.IO.Path.GetFullPath(importPath);
 		}
 
 		var baseDir = currentFilePath != null
 			? System.IO.Path.GetDirectoryName(currentFilePath)!
 			: Directory.GetCurrentDirectory();
 
-		var combined = System.IO.Path.Combine(baseDir, importPath);
-		return NormalizePath(combined);
+		return System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, importPath));
 	}
 
-	private static string NormalizePath(string path) {
-		if (!path.EndsWith(".rock", StringComparison.OrdinalIgnoreCase)) {
-			path += ".rock";
-		}
-		return System.IO.Path.GetFullPath(path);
-	}
-
-	protected override string LoadSource(string resolvedPath) {
-		if (!File.Exists(resolvedPath)) {
-			throw new FileNotFoundException($"Module not found: {resolvedPath}");
-		}
+	public override string? TryReadSource(string resolvedPath) {
+		if (!File.Exists(resolvedPath)) return null;
 		return File.ReadAllText(resolvedPath).ReplaceLineEndings();
 	}
 }
