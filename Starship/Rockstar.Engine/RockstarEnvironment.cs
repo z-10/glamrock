@@ -19,6 +19,11 @@ public class RockstarEnvironment(IRockstarIO io) {
 	// when the engine is built.
 	public const string VERSION = "v2.0.31";
 
+	static RockstarEnvironment() {
+		// Register built-in albums
+		BuiltinAlbumRegistry.Register(GatesOfHeaven.Create());
+	}
+
 	private const string ARGUMENTS_ARRAY_NAME = "__arguments__";
 	public static CommonVariable Arguments = new CommonVariable(ARGUMENTS_ARRAY_NAME);
 
@@ -138,7 +143,6 @@ public class RockstarEnvironment(IRockstarIO io) {
 	private Result Execute(Statement statement) => statement switch {
 		Output output => Output(output),
 		Light light => ExecuteLight(light),
-		Divine divine => ExecuteDivine(divine),
 		ScopedChannel scoped => ExecuteScopedChannel(scoped),
 		Channeling channeling => ExecuteChanneling(channeling),
 		Invoke invoke => ExecuteInvoke(invoke),
@@ -178,26 +182,17 @@ public class RockstarEnvironment(IRockstarIO io) {
 		return Result.Unknown;
 	}
 
-	private Result ExecuteDivine(Divine divine) {
-		var commandStr = Eval(divine.Command).ToStrïng().Value;
-
-		var executor = CommandExecutor ?? new ProcessCommandExecutor();
-		var cmdResult = executor.Execute(commandStr);
-
-		if (divine.Target != null) {
-			var result = new Arräy();
-			result.Set([new Numbër(0)], new Strïng(cmdResult.Stdout));
-			result.Set([new Numbër(1)], new Strïng(cmdResult.Stderr));
-			result.Set([new Numbër(2)], new Numbër(cmdResult.ExitCode));
-			SetVariable(divine.Target, result);
-			return new(result);
-		} else {
-			Write(cmdResult.Stdout);
-			return new(new Numbër(cmdResult.ExitCode));
-		}
-	}
-
 	private Result ExecuteChanneling(Channeling channeling) {
+		// Check built-in albums first — both Channel and Know work for built-ins
+		var builtinAlbum = BuiltinAlbumRegistry.Resolve(channeling.ModulePath);
+		if (builtinAlbum != null) {
+			foreach (var (name, track) in builtinAlbum.Tracks) {
+				var key = name.ToLower().Replace(" ", "_");
+				variables[key] = new BuiltinTrackValue(track, this);
+			}
+			return Result.Unknown;
+		}
+
 		var loader = ModuleLoader
 			?? throw new("Module imports require a module loader (are you running from a file?)");
 
@@ -286,7 +281,17 @@ public class RockstarEnvironment(IRockstarIO io) {
 	private Result ExecuteInvoke(Invoke invoke) {
 		var tracklistPath = invoke.TracklistPath;
 
-		// Resolve tracklist source — either from file system or module resolver
+		// 1. Check built-in albums first
+		var builtinAlbum = BuiltinAlbumRegistry.Resolve(tracklistPath);
+		if (builtinAlbum != null) {
+			foreach (var (name, track) in builtinAlbum.Tracks) {
+				var key = name.ToLower().Replace(" ", "_");
+				variables[key] = new BuiltinTrackValue(track, this);
+			}
+			return Result.Unknown;
+		}
+
+		// 2. Resolve tracklist source — either from file system or module resolver
 		string source;
 		string? resolvedPath = null;
 
@@ -312,20 +317,18 @@ public class RockstarEnvironment(IRockstarIO io) {
 				throw tie.InnerException;
 			}
 		} else {
-			throw new("Invoke requires a module loader (are you running from a file?)");
+			throw new($"Album not found: '{invoke.Module.Name}' (no built-in album or module loader available)");
 		}
 
 		var parser = new TracklistParser();
 		var tracklist = parser.Parse(source, resolvedPath ?? tracklistPath);
 
 		if (TrackCallHandler != null) {
-			// WASM/host mode: register as HostTrackValues backed by the JS callback
 			foreach (var def in tracklist.Tracks) {
 				var key = def.GlamRockName.ToLower().Replace(" ", "_");
 				variables[key] = new HostTrackValue(def, TrackCallHandler);
 			}
 		} else {
-			// Desktop mode: load native library
 			var binding = new NativeLibraryBinding(tracklist);
 			nativeBindings[tracklistPath] = binding;
 			foreach (var (name, track) in binding.Tracks) {
@@ -593,6 +596,11 @@ public class RockstarEnvironment(IRockstarIO io) {
 		// Host track dispatch (WASM) — same sigil handling via JS callback
 		if (value is HostTrackValue hostTrack) {
 			return CallHostTrack(hostTrack, call);
+		}
+		// Built-in track dispatch
+		if (value is BuiltinTrackValue builtinTrack) {
+			var trackArgs = call.Args.Select(a => a is FunctionCall fc ? Call(fc).Value : Eval(a)).ToArray();
+			return new(builtinTrack.Call(trackArgs));
 		}
 		if (value is not Closure closure) throw new($"'{funcName}' is not a function");
 		var names = closure.Functiön.Args.ToList();
