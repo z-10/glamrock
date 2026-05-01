@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Diagnostics;
 using System.Text;
-using System.Text.RegularExpressions;
 using Rockstar.Engine.Expressions;
 using Rockstar.Engine.Interop;
 using Rockstar.Engine.Statements;
@@ -22,6 +21,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 	static RockstarEnvironment() {
 		// Register built-in albums
 		BuiltinAlbumRegistry.Register(GatesOfHeaven.Create());
+		BuiltinAlbumRegistry.Register(TomeOfPower.Create());
 	}
 
 	private const string ARGUMENTS_ARRAY_NAME = "__arguments__";
@@ -183,39 +183,20 @@ public class RockstarEnvironment(IRockstarIO io) {
 	}
 
 	private Result ExecuteChanneling(Channeling channeling) {
-		// Check built-in albums first — both Channel and Know work for built-ins
-		var builtinAlbum = BuiltinAlbumRegistry.Resolve(channeling.ModulePath);
-		if (builtinAlbum != null) {
-			foreach (var (name, track) in builtinAlbum.Tracks) {
-				var key = name.ToLower().Replace(" ", "_");
-				variables[key] = new BuiltinTrackValue(track, this);
-			}
-			return Result.Unknown;
-		}
-
-		var loader = ModuleLoader
-			?? throw new("Module imports require a module loader (are you running from a file?)");
-
-		var resolvedPath = ModuleLoader.ResolvePath(channeling.ModulePath, SourceFilePath);
-		var exports = loader.Load(resolvedPath, IO);
-
-		// Store module exports for runtime 'from' lookups
+		var exports = LoadAlbumExports(channeling.ModulePath);
 		loadedModuleExports[channeling.Module.Key] = exports;
 
 		if (channeling.Imports != null) {
-			// Selective import: only import specified symbols
 			foreach (var variable in channeling.Imports) {
-				var key = variable.Name;
-				if (exports.TryGet(key, out var value)) {
+				if (exports.TryGet(variable.Name, out var value)) {
 					variables[variable.Key] = value;
 				} else {
-					throw new($"Module '{channeling.ModulePath}' does not export '{key}'");
+					throw new($"Module '{channeling.ModulePath}' does not export '{variable.Name}'");
 				}
 			}
 		} else {
-			// Import all exported symbols into current scope
 			foreach (var (name, value) in exports.All) {
-				variables[name.ToLower().Replace(" ", "_")] = value;
+				variables[SymbolKey(name)] = value;
 			}
 		}
 
@@ -234,13 +215,8 @@ public class RockstarEnvironment(IRockstarIO io) {
 	}
 
 	private Result ExecuteScopedChannel(ScopedChannel scoped) {
-		var loader = ModuleLoader
-			?? throw new("Module imports require a module loader (are you running from a file?)");
+		var exports = LoadAlbumExports(scoped.ModulePath);
 
-		var resolvedPath = ModuleLoader.ResolvePath(scoped.ModulePath, SourceFilePath);
-		var exports = loader.Load(resolvedPath, IO);
-
-		// Save previous state for restoration
 		var previousValues = new Dictionary<string, Value?>();
 		var moduleKey = scoped.Module.Key;
 		var hadModuleExport = loadedModuleExports.ContainsKey(moduleKey);
@@ -248,10 +224,9 @@ public class RockstarEnvironment(IRockstarIO io) {
 
 		loadedModuleExports[moduleKey] = exports;
 
-		// Import all exports, saving previous bindings
 		var importedKeys = new List<string>();
 		foreach (var (name, value) in exports.All) {
-			var key = name.ToLower().Replace(" ", "_");
+			var key = SymbolKey(name);
 			importedKeys.Add(key);
 			previousValues[key] = variables.TryGetValue(key, out var prev) ? prev : null;
 			variables[key] = value;
@@ -260,7 +235,6 @@ public class RockstarEnvironment(IRockstarIO io) {
 		try {
 			return Execute(scoped.Body);
 		} finally {
-			// Restore previous bindings
 			foreach (var key in importedKeys) {
 				if (previousValues.TryGetValue(key, out var prev) && prev != null) {
 					variables[key] = prev;
@@ -279,65 +253,66 @@ public class RockstarEnvironment(IRockstarIO io) {
 	private readonly Dictionary<string, NativeLibraryBinding> nativeBindings = new(StringComparer.OrdinalIgnoreCase);
 
 	private Result ExecuteInvoke(Invoke invoke) {
-		var tracklistPath = invoke.TracklistPath;
-
-		// 1. Check built-in albums first
-		var builtinAlbum = BuiltinAlbumRegistry.Resolve(tracklistPath);
-		if (builtinAlbum != null) {
-			foreach (var (name, track) in builtinAlbum.Tracks) {
-				var key = name.ToLower().Replace(" ", "_");
-				variables[key] = new BuiltinTrackValue(track, this);
-			}
-			return Result.Unknown;
+		var exports = LoadAlbumExports(invoke.TracklistPath);
+		loadedModuleExports[invoke.Module.Key] = exports;
+		foreach (var (name, value) in exports.All) {
+			variables[SymbolKey(name)] = value;
 		}
+		return Result.Unknown;
+	}
 
-		// 2. Resolve tracklist source — either from file system or module resolver
-		string source;
-		string? resolvedPath = null;
+	/// <summary>
+	/// Unified album loader. Probes built-in registry, .rock module, and .tracklist
+	/// in turn, merging exports so later sources override earlier ones on name
+	/// collisions (built-in &lt; .rock &lt; .tracklist). Throws if nothing is found.
+	/// </summary>
+	private ModuleExports LoadAlbumExports(string modulePath) {
+		var merged = new ModuleExports();
+		var loaded = false;
+
+		var builtin = BuiltinAlbumRegistry.Resolve(modulePath);
+		if (builtin != null) {
+			foreach (var (name, track) in builtin.Tracks) {
+				merged.Add(name, new BuiltinTrackValue(track, this));
+			}
+			loaded = true;
+		}
 
 		if (ModuleLoader != null) {
-			resolvedPath = ModuleLoader.ResolvePath(tracklistPath, SourceFilePath);
-			if (resolvedPath.EndsWith(".rock", StringComparison.OrdinalIgnoreCase)) {
-				resolvedPath = resolvedPath[..^5] + ".tracklist";
+			var rockPath = ModuleLoader.ResolvePath(modulePath + ".rock", SourceFilePath);
+			var rockExports = ModuleLoader.TryLoadModule(rockPath, IO);
+			if (rockExports != null) {
+				foreach (var (name, value) in rockExports.All) {
+					merged.Add(name, value);
+				}
+				loaded = true;
+			}
+
+			var tracklistPath = ModuleLoader.ResolvePath(modulePath + ".tracklist", SourceFilePath);
+			var tracklistSource = ModuleLoader.TryReadSource(tracklistPath);
+			if (tracklistSource != null) {
+				var tracklist = new TracklistParser().Parse(tracklistSource, tracklistPath);
+				if (TrackCallHandler != null) {
+					foreach (var def in tracklist.Tracks) {
+						merged.Add(def.GlamRockName, new HostTrackValue(def, TrackCallHandler));
+					}
+				} else {
+					var binding = new NativeLibraryBinding(tracklist);
+					nativeBindings[modulePath] = binding;
+					foreach (var (name, track) in binding.Tracks) {
+						merged.Add(name, new NativeTrackValue(track));
+					}
+				}
+				loaded = true;
 			}
 		}
 
-		// Try loading tracklist content
-		if (ModuleLoader is ModuleLoader fsLoader && resolvedPath != null && File.Exists(resolvedPath)) {
-			source = File.ReadAllText(resolvedPath);
-		} else if (ModuleLoader != null) {
-			// WASM path: try loading via module resolver (tracklist served from JS)
-			try {
-				var altPath = tracklistPath + ".tracklist";
-				source = ModuleLoader.GetType().GetMethod("LoadSource",
-					System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-					?.Invoke(ModuleLoader, [altPath]) as string
-					?? throw new FileNotFoundException($"Tracklist not found: {tracklistPath}");
-			} catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException is FileNotFoundException) {
-				throw tie.InnerException;
-			}
-		} else {
-			throw new($"Album not found: '{invoke.Module.Name}' (no built-in album or module loader available)");
+		if (!loaded) {
+			throw new FileNotFoundException(
+				$"Album '{modulePath}' not found (no built-in album, .rock module, or .tracklist file)");
 		}
 
-		var parser = new TracklistParser();
-		var tracklist = parser.Parse(source, resolvedPath ?? tracklistPath);
-
-		if (TrackCallHandler != null) {
-			foreach (var def in tracklist.Tracks) {
-				var key = def.GlamRockName.ToLower().Replace(" ", "_");
-				variables[key] = new HostTrackValue(def, TrackCallHandler);
-			}
-		} else {
-			var binding = new NativeLibraryBinding(tracklist);
-			nativeBindings[tracklistPath] = binding;
-			foreach (var (name, track) in binding.Tracks) {
-				var key = name.ToLower().Replace(" ", "_");
-				variables[key] = new NativeTrackValue(track);
-			}
-		}
-
-		return Result.Unknown;
+		return merged;
 	}
 
 	private Result CallNativeTrack(NativeTrackValue trackValue, FunctionCall call) {
@@ -400,6 +375,37 @@ public class RockstarEnvironment(IRockstarIO io) {
 		foreach (var (idx, value) in sigilOutputs) {
 			if (argVariables[idx] != null) {
 				SetVariable(argVariables[idx]!, value);
+			}
+		}
+
+		return new(result);
+	}
+
+	private Result CallBuiltinTrack(BuiltinTrackValue builtinTrack, FunctionCall call) {
+		var track = builtinTrack.Track;
+
+		var args = new Value[call.Args.Count];
+		var argVariables = new Variable?[call.Args.Count];
+
+		for (int i = 0; i < call.Args.Count; i++) {
+			var param = i < track.Parameters.Length ? track.Parameters[i] : null;
+			var argExpr = call.Args[i];
+
+			if (param is { IsSigil: true } && argExpr is Lookup lookup) {
+				argVariables[i] = lookup.Variable;
+				args[i] = Nüll.Instance;
+			} else {
+				args[i] = argExpr is FunctionCall nestedCall
+					? Call(nestedCall).Value
+					: Eval(argExpr);
+			}
+		}
+
+		var result = builtinTrack.Call(args);
+
+		for (int i = 0; i < argVariables.Length; i++) {
+			if (argVariables[i] != null) {
+				SetVariable(argVariables[i]!, result);
 			}
 		}
 
@@ -599,8 +605,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 		}
 		// Built-in track dispatch
 		if (value is BuiltinTrackValue builtinTrack) {
-			var trackArgs = call.Args.Select(a => a is FunctionCall fc ? Call(fc).Value : Eval(a)).ToArray();
-			return new(builtinTrack.Call(trackArgs));
+			return CallBuiltinTrack(builtinTrack, call);
 		}
 		if (value is not Closure closure) throw new($"'{funcName}' is not a function");
 		var names = closure.Functiön.Args.ToList();
@@ -721,5 +726,21 @@ public class RockstarEnvironment(IRockstarIO io) {
 		var key = variable is Pronoun pronoun ? QualifyPronoun(pronoun).Key : variable.Key;
 		var value = LookupValue(key, scope);
 		return value.AtIndex(variable.Indexes.Select(Eval));
+	}
+
+	private static string SymbolKey(string name) {
+		if (name.StartsWith("the ", StringComparison.OrdinalIgnoreCase)) {
+			return new CommonVariable(name).Key;
+		}
+
+		if (name.Contains(' ')) {
+			try {
+				return new ProperVariable(name).Key;
+			} catch (ArgumentException) {
+				return new CommonVariable(name).Key;
+			}
+		}
+
+		return new SimpleVariable(name).Key;
 	}
 }

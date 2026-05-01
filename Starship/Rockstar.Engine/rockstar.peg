@@ -1,7 +1,6 @@
 @namespace Rockstar.Engine
 @classname PegParser
 @using System.Globalization
-@using System.Text.RegularExpressions
 @using Rockstar.Engine.Statements
 @using Rockstar.Engine.Expressions
 @using Rockstar.Engine.Values
@@ -35,13 +34,13 @@ block <Block>
 
 statement -memoize
 	= listen_stmt
+	/ function_call
 	/ output_stmt
 	/ shining_stmt
 	/ scoped_channel_stmt
 	/ channeling_stmt
 	/ invoke_stmt
 	/ function
-	/ function_call
 	/ call_stmt
 	/ return_stmt
 	/ break_stmt
@@ -311,7 +310,10 @@ variable <Variable>
 
 args = arguments / 'the' _ ( world / outside )
 
-proper_variable	= proper_noun (_ proper_noun)+
+proper_variable	= proper_noun (_ (proper_connector _)? proper_noun)+
+
+proper_connector = of / proper_the
+proper_the = 'the' !letter
 
 proper_noun	= uppercase_letter '.'
 			/ !keyword &uppercase_letter identifier

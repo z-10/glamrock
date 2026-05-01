@@ -1,0 +1,45 @@
+ALBUM gdi32.dll
+
+TRACK Penforge FEATURING CreatePen
+  TAKES number, number, number
+  GIVES mysterious
+
+TRACK Brushforge FEATURING CreateSolidBrush
+  TAKES number
+  GIVES mysterious
+
+TRACK ToolChoose FEATURING SelectObject
+  TAKES mysterious, mysterious
+  GIVES mysterious
+
+TRACK ToolBreak FEATURING DeleteObject
+  TAKES mysterious
+  GIVES boolean
+
+TRACK PointSet FEATURING MoveToEx
+  TAKES mysterious, number, number, mysterious
+  GIVES boolean
+
+TRACK Linestrike FEATURING LineTo
+  TAKES mysterious, number, number
+  GIVES boolean
+
+TRACK Halodraw FEATURING Ellipse
+  TAKES mysterious, number, number, number, number
+  GIVES boolean
+
+TRACK Boxdraw FEATURING Rectangle
+  TAKES mysterious, number, number, number, number
+  GIVES boolean
+
+TRACK TextGlow FEATURING SetTextColor
+  TAKES mysterious, number
+  GIVES number
+
+TRACK Shadowveil FEATURING SetBkMode
+  TAKES mysterious, number
+  GIVES number
+
+TRACK Lyricburn FEATURING TextOutW
+  TAKES mysterious, number, number, string, number
+  GIVES boolean

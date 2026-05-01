@@ -31,6 +31,7 @@ public class NativeTrack {
 		sigilOutputs = new();
 		var nativeArgs = new object?[Definition.Parameters.Length];
 		var sigilPtrs = new Dictionary<int, GCHandle>();
+		var invokeParameters = delegateType.GetMethod("Invoke")!.GetParameters();
 
 		try {
 			for (int i = 0; i < Definition.Parameters.Length; i++) {
@@ -48,7 +49,22 @@ public class NativeTrack {
 				}
 			}
 
-			var result = nativeDelegate.DynamicInvoke(nativeArgs);
+			for (int i = 0; i < nativeArgs.Length; i++) {
+				nativeArgs[i] = CoerceNativeArgument(nativeArgs[i], invokeParameters[i].ParameterType);
+			}
+
+			object? result;
+			try {
+				result = nativeDelegate.DynamicInvoke(nativeArgs);
+			} catch (Exception ex) {
+				var expected = string.Join(", ", delegateType.GetMethod("Invoke")!.GetParameters()
+					.Select(p => p.ParameterType.Name));
+				var actual = string.Join(", ", nativeArgs.Select(a => a?.GetType().Name ?? "null"));
+				throw new InvalidOperationException(
+					$"Native call '{Definition.NativeName}' failed. Expected [{expected}], got [{actual}].",
+					ex
+				);
+			}
 
 			// Read back sigil outputs
 			foreach (var (idx, handle) in sigilPtrs) {
@@ -72,6 +88,33 @@ public class NativeTrack {
 				}
 			}
 		}
+	}
+
+	private static object? CoerceNativeArgument(object? value, Type expectedType) {
+		if (expectedType == typeof(IntPtr)) {
+			return value switch {
+				null => IntPtr.Zero,
+				IntPtr ptr => ptr,
+				int i => new IntPtr(i),
+				long l => new IntPtr(l),
+				decimal d => new IntPtr((long)d),
+				_ => value
+			};
+		}
+
+		if (expectedType == typeof(int)) {
+			return value switch {
+				null => 0,
+				int i => i,
+				bool b => b ? 1 : 0,
+				IntPtr ptr => ptr.ToInt32(),
+				long l => checked((int)l),
+				decimal d => (int)d,
+				_ => Convert.ToInt32(value)
+			};
+		}
+
+		return value;
 	}
 
 	private static object? MarshalToNative(Value value, InteropType type) => type switch {

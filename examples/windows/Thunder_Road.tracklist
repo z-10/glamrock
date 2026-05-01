@@ -1,0 +1,9 @@
+ALBUM kernel32.dll
+
+TRACK Thunderpause FEATURING Sleep
+  TAKES number
+  GIVES nothing
+
+TRACK Wordcount FEATURING lstrlenW
+  TAKES string
+  GIVES number

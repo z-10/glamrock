@@ -1,11 +1,19 @@
-using System.Text.RegularExpressions;
-
 namespace Rockstar.Engine.Expressions;
 
 public class SimpleVariable : Variable {
-	private static readonly Regex illegalCharacters = new("\\W+", RegexOptions.Compiled);
 	public SimpleVariable(string name) :base(name) {
-		if (illegalCharacters.IsMatch(name)) throw new ArgumentException($"{name} is not a valid simple variable name");
+		if (!IsValidSimpleVariableName(name)) throw new ArgumentException($"{name} is not a valid simple variable name");
 	}
 	public override string Key => Name.ToLower();
+
+	private static bool IsValidSimpleVariableName(string name) {
+		if (string.IsNullOrEmpty(name)) return false;
+
+		for (var i = 0; i < name.Length; i++) {
+			var ch = name[i];
+			if (!char.IsLetterOrDigit(ch) && ch != '_') return false;
+		}
+
+		return true;
+	}
 }

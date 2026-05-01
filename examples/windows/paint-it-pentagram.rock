@@ -1,0 +1,106 @@
+Invoke Stage Fright; Know Black Steel
+Divine Thunder Road
+Conjure Tome of Power
+
+The void is 0; The show is 5
+The solid is 0
+
+The frame is 282001408! The night is 1708562!
+The halo is 3649492; The fire is 4597980
+The gold is 65535; The clear is 1
+Cast 10 into the breaker
+Cast 13 into the returner
+
+Let the stage be Windowforge taking the void, "STATIC", "Pentagrammaton", the frame, 160, 80, 900, 900, the void, the void, the void, the void
+
+StageRise taking the stage, the show
+StageRefresh taking the stage
+
+Let the screen be ScreenSeize taking the stage
+
+Let the darkness be Brushforge taking the night
+Let Glow Pen be Penforge taking the solid, 14, the halo
+Let Blaze Pen be Penforge taking the solid, 8, the fire
+
+Rock the lyrics
+Call Open The Tome with "paint-it-pentagram.rock", "r" into the grimoire
+
+Until Tome Exhausted taking the grimoire
+	Call Read The Line with the grimoire into the verse
+	Split the verse into the fragments with the returner
+	Roll the fragments into the clean
+	Rock the lyrics with the clean
+Yeah
+
+Call Seal The Tome with the grimoire
+
+Paint Night takes nothing
+	ToolChoose taking the screen, the darkness
+	Boxdraw taking the screen, 0, 0, 900, 900
+Yeah
+
+Paint Star takes nothing
+	ToolChoose taking the screen, Glow Pen
+	Halodraw taking the screen, 110, 110, 790, 790
+	PointSet taking the screen, 450, 120, the void
+	Linestrike taking the screen, 740, 690
+	PointSet taking the screen, 740, 690, the void
+	Linestrike taking the screen, 155, 355
+	PointSet taking the screen, 155, 355, the void
+	Linestrike taking the screen, 745, 355
+	PointSet taking the screen, 745, 355, the void
+	Linestrike taking the screen, 160, 690
+	PointSet taking the screen, 160, 690, the void
+	Linestrike taking the screen, 450, 120
+	ToolChoose taking the screen, Blaze Pen
+	PointSet taking the screen, 450, 120, the void
+	Linestrike taking the screen, 740, 690
+	PointSet taking the screen, 740, 690, the void
+	Linestrike taking the screen, 155, 355
+	PointSet taking the screen, 155, 355, the void
+	Linestrike taking the screen, 745, 355
+	PointSet taking the screen, 745, 355, the void
+	Linestrike taking the screen, 160, 690
+	PointSet taking the screen, 160, 690, the void
+	Linestrike taking the screen, 450, 120
+Yeah
+
+Sing Line takes the line, x, y
+	Split the line into the fragments with the returner
+	Roll the fragments into the clean
+	Let the count be Wordcount taking the clean
+	Lyricburn taking the screen, x, y, the clean, the count
+Yeah
+
+Sing Song takes the skyline
+	For every line and index in the lyrics
+		Let the row be the skyline with the index times 28
+		If the row is above -40 and the row is below 900
+			Call Sing Line with the line, 96, the row
+		Yeah
+	Yeah
+Yeah
+
+TextGlow taking the screen, the gold
+Shadowveil taking the screen, the clear
+
+The skyline is 920
+Let the count be the lyrics plus 0
+Let the stride be 28
+Let the last be the count minus 1
+Let the tail be the skyline with the last times the stride
+
+While the tail is higher than -40
+	Call Paint Night
+	Call Paint Star
+	Call Sing Song with the skyline
+	Thunderpause taking 35
+	Knock the skyline down, down, down, down, down, down
+	Let the tail be the skyline with the last times the stride
+Yeah
+
+ToolBreak taking Glow Pen
+ToolBreak taking Blaze Pen
+ToolBreak taking the darkness
+ScreenFree taking the stage, the screen
+CurtainFall taking the stage

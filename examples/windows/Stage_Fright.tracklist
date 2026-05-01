@@ -1,0 +1,25 @@
+ALBUM user32.dll
+
+TRACK Windowforge FEATURING CreateWindowExW
+  TAKES mysterious, string, string, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious, mysterious
+  GIVES mysterious
+
+TRACK StageRise FEATURING ShowWindow
+  TAKES mysterious, number
+  GIVES boolean
+
+TRACK StageRefresh FEATURING UpdateWindow
+  TAKES mysterious
+  GIVES boolean
+
+TRACK ScreenSeize FEATURING GetDC
+  TAKES mysterious
+  GIVES mysterious
+
+TRACK ScreenFree FEATURING ReleaseDC
+  TAKES mysterious, mysterious
+  GIVES number
+
+TRACK CurtainFall FEATURING DestroyWindow
+  TAKES mysterious
+  GIVES boolean

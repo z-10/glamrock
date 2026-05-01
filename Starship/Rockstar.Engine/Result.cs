@@ -9,7 +9,7 @@ public class Parser {
 
 	public Program Parse(string source) {
 		try {
-			return pegParser.Parse(source);
+			return pegParser.Parse(source.TrimStart('\uFEFF'));
 		} catch (FormatException ex) {
 			if (ex.Data["cursor"] is Cursor cursor) throw new ParserException(cursor, ex);
 			throw;
