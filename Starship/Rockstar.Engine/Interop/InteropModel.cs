@@ -32,5 +32,6 @@ public enum TracklistKind {
 public record TracklistFile(
 	TracklistKind Kind,
 	string LibraryPath,            // DLL/SO path from ALBUM/MIXTAPE line
-	TrackDefinition[] Tracks
+	TrackDefinition[] Tracks,
+	string? SourcePath = null
 );

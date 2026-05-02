@@ -251,6 +251,7 @@ public class RockstarEnvironment(IRockstarIO io) {
 	}
 
 	private readonly Dictionary<string, NativeLibraryBinding> nativeBindings = new(StringComparer.OrdinalIgnoreCase);
+	private readonly Dictionary<string, ManagedLibraryBinding> managedBindings = new(StringComparer.OrdinalIgnoreCase);
 
 	private Result ExecuteInvoke(Invoke invoke) {
 		var exports = LoadAlbumExports(invoke.TracklistPath);
@@ -295,6 +296,12 @@ public class RockstarEnvironment(IRockstarIO io) {
 				if (TrackCallHandler != null) {
 					foreach (var def in tracklist.Tracks) {
 						merged.Add(def.GlamRockName, new HostTrackValue(def, TrackCallHandler));
+					}
+				} else if (tracklist.Kind == TracklistKind.Mixtape) {
+					var binding = new ManagedLibraryBinding(tracklist);
+					managedBindings[modulePath] = binding;
+					foreach (var (name, track) in binding.Tracks) {
+						merged.Add(name, new MixtapeTrackValue(track));
 					}
 				} else {
 					var binding = new NativeLibraryBinding(tracklist);
@@ -409,6 +416,21 @@ public class RockstarEnvironment(IRockstarIO io) {
 			}
 		}
 
+		return new(result);
+	}
+
+	private Result CallMixtapeTrack(MixtapeTrackValue trackValue, FunctionCall call) {
+		var track = trackValue.Track;
+
+		var args = new Value[call.Args.Count];
+		for (int i = 0; i < call.Args.Count; i++) {
+			var argExpr = call.Args[i];
+			args[i] = argExpr is FunctionCall nestedCall
+				? Call(nestedCall).Value
+				: Eval(argExpr);
+		}
+
+		var result = track.Call(args);
 		return new(result);
 	}
 
@@ -602,6 +624,10 @@ public class RockstarEnvironment(IRockstarIO io) {
 		// Host track dispatch (WASM) — same sigil handling via JS callback
 		if (value is HostTrackValue hostTrack) {
 			return CallHostTrack(hostTrack, call);
+		}
+		// Mixtape track dispatch (managed assembly / COM ProgID, reflection-based)
+		if (value is MixtapeTrackValue mixtapeTrack) {
+			return CallMixtapeTrack(mixtapeTrack, call);
 		}
 		// Built-in track dispatch
 		if (value is BuiltinTrackValue builtinTrack) {

@@ -1,0 +1,51 @@
+Void is 0
+Encore is 5
+TrueRune is 1
+CloseCry is 16
+CrownCry is 274
+DarkKnock is 161
+FinalKnock is 20
+CloseCrown is 61536
+VelvetGate is 282001408
+NightInk is 1708562
+GhostFire is 3649492
+HeartFire is 4597980
+GoldBlood is 65535
+StolenBeam is 13369376
+ClearVeil is 1
+StageLeft is 160
+StageTop is 80
+StageWide is 900
+MessageCup is 64
+SilverWidth is 14
+ScarletWidth is 8
+LongRoad is 1024
+EchoCup is 256
+DecimalRite is 10
+SleepBeat is 16
+LyricBeat is 28
+ScrollRush is 4
+SongFallback is 30000
+DeepFall is 80
+MoonStart is 860
+LowVerse is -40
+TextLeft is 96
+HaloLow is 110
+HaloHigh is 790
+TopStar is 120
+MidStar is 450
+RightStar is 740
+DeepStar is 690
+LeftStar is 155
+HalfStar is 355
+FarStar is 745
+NearStar is 160
+WordRoom is 4
+MessageWord is 8
+WParamWord is 16
+Light Void, Encore, TrueRune, CloseCry, CrownCry, DarkKnock, FinalKnock, CloseCrown
+Light VelvetGate, NightInk, GhostFire, HeartFire, GoldBlood, StolenBeam, ClearVeil, StageLeft
+Light StageTop, StageWide, MessageCup, SilverWidth, ScarletWidth, LongRoad, EchoCup
+Light DecimalRite, SleepBeat, LyricBeat, ScrollRush, SongFallback, DeepFall, MoonStart, LowVerse
+Light TextLeft, HaloLow, HaloHigh, TopStar, MidStar, RightStar, DeepStar, LeftStar
+Light HalfStar, FarStar, NearStar, WordRoom, MessageWord, WParamWord

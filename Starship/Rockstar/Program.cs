@@ -7,6 +7,7 @@ public static class Program {
 	private static bool showTiming = false;
 	private static bool showParseTree = false;
 	private static readonly Parser parser = new();
+	[STAThread]
 	public static void Main(string[] args) {
 		string? rockstarProgramFile = null;
 		List<string> programArguments = [];

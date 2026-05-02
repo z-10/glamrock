@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+using System.Text;
 using Rockstar.Engine.Values;
 
 namespace Rockstar.Engine.Interop;
@@ -31,6 +32,7 @@ public class NativeTrack {
 		sigilOutputs = new();
 		var nativeArgs = new object?[Definition.Parameters.Length];
 		var sigilPtrs = new Dictionary<int, GCHandle>();
+		var sigilStrings = new Dictionary<int, StringBuilder>();
 		var invokeParameters = delegateType.GetMethod("Invoke")!.GetParameters();
 
 		try {
@@ -39,11 +41,17 @@ public class NativeTrack {
 				var arg = i < args.Length ? args[i] : Nüll.Instance;
 
 				if (param.IsSigil) {
-					// Allocate a pinned IntPtr for the native function to write into
-					var box = new IntPtr[1];
-					var handle = GCHandle.Alloc(box, GCHandleType.Pinned);
-					sigilPtrs[i] = handle;
-					nativeArgs[i] = handle.AddrOfPinnedObject();
+					if (param.Type == InteropType.String) {
+						var buffer = new StringBuilder(4096);
+						sigilStrings[i] = buffer;
+						nativeArgs[i] = buffer;
+					} else {
+						// Allocate a pinned IntPtr for the native function to write into
+						var box = new IntPtr[1];
+						var handle = GCHandle.Alloc(box, GCHandleType.Pinned);
+						sigilPtrs[i] = handle;
+						nativeArgs[i] = handle.AddrOfPinnedObject();
+					}
 				} else {
 					nativeArgs[i] = MarshalToNative(arg, param.Type);
 				}
@@ -72,13 +80,21 @@ public class NativeTrack {
 				sigilOutputs[idx] = new Numbër((decimal)box[0]);
 			}
 
+			foreach (var (idx, buffer) in sigilStrings) {
+				var text = buffer.ToString();
+				var terminator = text.IndexOf('\0');
+				if (terminator >= 0) {
+					text = text[..terminator];
+				}
+				sigilOutputs[idx] = new Str\u00efng(text);
+			}
+
 			return MarshalFromNative(result, Definition.ReturnType);
 		} finally {
 			// Free pinned handles
 			foreach (var handle in sigilPtrs.Values) {
 				handle.Free();
 			}
-
 			// Free marshaled strings
 			for (int i = 0; i < nativeArgs.Length; i++) {
 				if (!Definition.Parameters[i].IsSigil &&
@@ -91,6 +107,10 @@ public class NativeTrack {
 	}
 
 	private static object? CoerceNativeArgument(object? value, Type expectedType) {
+		if (expectedType == typeof(StringBuilder)) {
+			return value;
+		}
+
 		if (expectedType == typeof(IntPtr)) {
 			return value switch {
 				null => IntPtr.Zero,
@@ -148,7 +168,9 @@ public class NativeTrack {
 	/// </summary>
 	private static Type BuildDelegateType(TrackDefinition definition) {
 		var paramTypes = definition.Parameters.Select(p => p.IsSigil
-			? typeof(IntPtr)  // sigil passes pointer to output location
+			? p.Type == InteropType.String
+				? typeof(StringBuilder)
+				: typeof(IntPtr)  // non-string sigil passes pointer to output location
 			: GetManagedType(p.Type)
 		).ToArray();
 
@@ -164,6 +186,13 @@ public class NativeTrack {
 			$"NativeDelegate_{definition.NativeName}_{Guid.NewGuid():N}",
 			TypeAttributes.Public | TypeAttributes.Sealed,
 			typeof(MulticastDelegate));
+		var unmanagedFunctionPointerCtor = typeof(UnmanagedFunctionPointerAttribute).GetConstructor([typeof(CallingConvention)])!;
+		var charSetField = typeof(UnmanagedFunctionPointerAttribute).GetField(nameof(UnmanagedFunctionPointerAttribute.CharSet))!;
+		typeBuilder.SetCustomAttribute(new CustomAttributeBuilder(
+			unmanagedFunctionPointerCtor,
+			[CallingConvention.Winapi],
+			[charSetField],
+			[CharSet.Unicode]));
 
 		// Constructor
 		var ctorBuilder = typeBuilder.DefineConstructor(
@@ -178,6 +207,14 @@ public class NativeTrack {
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.Virtual,
 			returnType,
 			paramTypes);
+		var marshalAsCtor = typeof(MarshalAsAttribute).GetConstructor([typeof(UnmanagedType)])!;
+		var lpwStrAttribute = new CustomAttributeBuilder(marshalAsCtor, [UnmanagedType.LPWStr]);
+		for (var i = 0; i < paramTypes.Length; i++) {
+			if (paramTypes[i] == typeof(string) || paramTypes[i] == typeof(StringBuilder)) {
+				var parameter = invokeBuilder.DefineParameter(i + 1, ParameterAttributes.None, null);
+				parameter.SetCustomAttribute(lpwStrAttribute);
+			}
+		}
 		invokeBuilder.SetImplementationFlags(MethodImplAttributes.Runtime | MethodImplAttributes.Managed);
 
 		return typeBuilder.CreateType();
@@ -204,11 +241,35 @@ public class NativeLibraryBinding : IDisposable {
 
 	public NativeLibraryBinding(TracklistFile tracklist) {
 		Tracklist = tracklist;
-		libraryHandle = NativeLibrary.Load(tracklist.LibraryPath);
+		libraryHandle = LoadLibrary(tracklist);
 
 		foreach (var def in tracklist.Tracks) {
 			tracks[def.GlamRockName] = new NativeTrack(def, libraryHandle);
 		}
+	}
+
+	internal static string? ResolveRelativeLibraryPath(TracklistFile tracklist) {
+		if (Path.IsPathRooted(tracklist.LibraryPath) || tracklist.SourcePath == null) {
+			return null;
+		}
+
+		var baseDir = Path.GetDirectoryName(tracklist.SourcePath);
+		return string.IsNullOrEmpty(baseDir)
+			? null
+			: Path.GetFullPath(Path.Combine(baseDir, tracklist.LibraryPath));
+	}
+
+	private static IntPtr LoadLibrary(TracklistFile tracklist) {
+		var relativePath = ResolveRelativeLibraryPath(tracklist);
+		if (relativePath != null) {
+			try {
+				return NativeLibrary.Load(relativePath);
+			} catch (DllNotFoundException) when (!File.Exists(relativePath)) {
+				// Fall back to the platform loader for system libraries like gdi32.dll.
+			}
+		}
+
+		return NativeLibrary.Load(tracklist.LibraryPath);
 	}
 
 	public NativeTrack? GetTrack(string glamRockName)

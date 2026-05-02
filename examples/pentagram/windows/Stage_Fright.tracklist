@@ -12,6 +12,10 @@ TRACK Wake The Stage FEATURING UpdateWindow
   TAKES mysterious
   GIVES boolean
 
+TRACK Still The Stage FEATURING IsWindow
+  TAKES mysterious
+  GIVES boolean
+
 TRACK Borrow The Spotlight FEATURING GetDC
   TAKES mysterious
   GIVES mysterious
@@ -26,6 +30,10 @@ TRACK Drop The Curtain FEATURING DestroyWindow
 
 TRACK Catch The Murmur FEATURING PeekMessageW
   TAKES mysterious, mysterious, number, number, number
+  GIVES boolean
+
+TRACK Turn The Murmur FEATURING TranslateMessage
+  TAKES mysterious
   GIVES boolean
 
 TRACK Carry The Murmur FEATURING DispatchMessageW

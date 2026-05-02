@@ -1,0 +1,5 @@
+ALBUM winmm.dll
+
+TRACK Serenade The Machine FEATURING mciSendStringW
+  TAKES string, string sigil, number, mysterious
+  GIVES number

@@ -1,0 +1,147 @@
+Channel Pentagram Runes
+Invoke Stage Fright
+Know Black Steel
+Divine Thunder Road
+Know Sweet Serenade
+Conjure Tome of Power
+Let room be Velvet Door taking Void,"STATIC","Pentagrammaton",VelvetGate,StageLeft,StageTop,StageWide,StageWide,Void,Void,Void,Void
+Raise The Curtain taking room,Encore
+Wake The Stage taking room
+Let beam be Borrow The Spotlight taking room
+Let mirror be Mirror The Stage taking beam
+Let dream be Dream The Canvas taking beam,StageWide,StageWide
+Release The Spotlight taking room,beam
+Choose The Jewel taking mirror,dream
+Gild The Words taking mirror,GoldBlood
+Veil The Hush taking mirror,ClearVeil
+Let note be Memory Chalice taking Void,MessageCup
+Let dark be Velvet Brush taking NightInk
+Let silver be Silver Needle taking Void,SilverWidth,GhostFire
+Let red be Silver Needle taking Void,ScarletWidth,HeartFire
+Road takes trail
+	Let road be ""
+	Call Find The Road with trail,LongRoad,road,Void into junk
+	Give back road
+Yeah
+Let song be "..\assets\pentagram.mp3"
+Call Road with song into song
+Let echo be ""
+Let page be "pentagram.rock"
+Open takes path
+	Let cmd be "open """ with path with """ type mpegvideo alias pentagram_song"
+	Call Serenade The Machine with cmd,echo,EchoCup,Void into trouble
+	Give back trouble
+Yeah
+Call Open with song into trouble
+If trouble isn't Void
+	Let song be "examples\pentagram\assets\pentagram.mp3"
+	Call Road with song into song
+	Call Open with song into trouble
+Yeah
+If trouble isn't Void
+	Shout "audio open " with trouble
+Yeah
+Let length be SongFallback
+Call Serenade The Machine with "status pentagram_song length",echo,EchoCup,Void into trouble
+If trouble is Void
+	If echo isn't ""
+		Cast echo into length with DecimalRite
+	Yeah
+Yeah
+Rock lines
+Rock sizes
+Call Open The Tome with page,"r" into book
+Until Tome Exhausted taking book
+	Call Read The Line with book into lyric
+	Let size be Count The Roses taking lyric
+	Rock lines with lyric
+	Rock sizes with size
+Yeah
+Call Seal The Tome with book
+Backdrop takes cloth
+	Choose The Jewel taking cloth,dark
+	Midnight Room taking cloth,Void,Void,StageWide,StageWide
+Yeah
+Bolt takes cloth and east and south
+	Draw The Lightning taking cloth,east,south
+Yeah
+Star takes cloth
+	Choose The Jewel taking cloth,silver
+	Moonlit Halo taking cloth,HaloLow,HaloLow,HaloHigh,HaloHigh
+	Kiss The Canvas taking cloth,MidStar,TopStar,Void
+	Call Bolt with cloth,RightStar,DeepStar
+	Call Bolt with cloth,LeftStar,HalfStar
+	Call Bolt with cloth,FarStar,HalfStar
+	Call Bolt with cloth,NearStar,DeepStar
+	Call Bolt with cloth,MidStar,TopStar
+	Choose The Jewel taking cloth,red
+	Kiss The Canvas taking cloth,MidStar,TopStar,Void
+	Call Bolt with cloth,RightStar,DeepStar
+	Call Bolt with cloth,LeftStar,HalfStar
+	Call Bolt with cloth,FarStar,HalfStar
+	Call Bolt with cloth,NearStar,DeepStar
+	Call Bolt with cloth,MidStar,TopStar
+Yeah
+Lyrics takes cloth and rise
+	For every Lyric and Step in lines
+		Let verse be rise with the Step times LyricBeat
+		If verse is above LowVerse and verse is below StageWide
+			Let span be sizes at the Step
+			Brand The Lyric taking cloth,TextLeft,verse,the Lyric,span
+		Yeah
+	Yeah
+Yeah
+Let count be lines plus Void
+Let fall be count times LyricBeat
+Let abyss be Void minus fall
+Let abyss be abyss minus DeepFall
+Let moon be MoonStart
+Let drift be moon minus abyss
+Let drift be drift times SleepBeat divided by length
+Let drift be drift times ScrollRush
+Pump takes nothing
+	While Catch The Murmur taking note,Void,Void,Void,TrueRune
+		Let mark be note plus MessageWord
+		Let kind be Void
+		Call Hear Omen with kind,mark,WordRoom
+		Let sigil be note plus WParamWord
+		Let sign be Void
+		Call Hear Omen with sign,sigil,WordRoom
+		If kind is CloseCry
+			Drop The Curtain taking room
+		Else
+			If kind is CrownCry and sign is CloseCrown
+				Drop The Curtain taking room
+			Else
+				If kind is DarkKnock and sign is FinalKnock
+					Drop The Curtain taking room
+				Else
+					Turn The Murmur taking note
+					Carry The Murmur taking note
+				Yeah
+			Yeah
+		Yeah
+	Yeah
+Yeah
+Let play be "play pentagram_song from " with Void
+Call Serenade The Machine with play,echo,EchoCup,Void into trouble
+While moon is higher than abyss and Still The Stage taking room
+	Call Backdrop with mirror
+	Call Star with mirror
+	Call Lyrics with mirror,moon
+	Let beam be Borrow The Spotlight taking room
+	Flash The Vision taking beam,Void,Void,StageWide,StageWide,mirror,Void,Void,StolenBeam
+	Release The Spotlight taking room,beam
+	Call Pump
+	Thunder Lullaby taking SleepBeat
+	Let moon be moon minus drift
+Yeah
+Call Serenade The Machine with "stop pentagram_song",echo,EchoCup,Void into trouble
+Call Serenade The Machine with "close pentagram_song",echo,EchoCup,Void into trouble
+Release The Memory taking note
+Crack The Jewel taking silver
+Crack The Jewel taking red
+Crack The Jewel taking dark
+Crack The Jewel taking dream
+Fade The Mirror taking mirror
+Drop The Curtain taking room

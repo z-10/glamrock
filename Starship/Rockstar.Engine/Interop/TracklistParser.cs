@@ -60,7 +60,7 @@ public class TracklistParser {
 				$"Tracklist{Location(filename)} has no TRACK definitions");
 		}
 
-		return new TracklistFile(kind.Value, libraryPath, tracks.ToArray());
+		return new TracklistFile(kind.Value, libraryPath, tracks.ToArray(), filename);
 	}
 
 	private TrackDefinition ParseTrack(List<string> lines, ref int i, string? filename) {
@@ -119,11 +119,20 @@ public class TracklistParser {
 	}
 
 	private InteropParam ParseParam(string text, string? filename, int lineNum) {
-		var lower = text.ToLowerInvariant();
+		var trimmed = text.Trim();
+		var lower = trimmed.ToLowerInvariant();
 		if (lower == "sigil") {
 			return new InteropParam(InteropType.Mysterious, ParamDirection.Out);
 		}
-		var type = ParseType(text, filename, lineNum);
+		if (lower.EndsWith(" sigil", StringComparison.OrdinalIgnoreCase)) {
+			var sigilType = ParseType(trimmed[..^6], filename, lineNum);
+			return new InteropParam(sigilType, ParamDirection.Out);
+		}
+		if (lower.StartsWith("sigil ", StringComparison.OrdinalIgnoreCase)) {
+			var sigilType = ParseType(trimmed[6..], filename, lineNum);
+			return new InteropParam(sigilType, ParamDirection.Out);
+		}
+		var type = ParseType(trimmed, filename, lineNum);
 		return new InteropParam(type);
 	}
 
